@@ -28,7 +28,6 @@ Deleting entities :
 
     website_del = websites[0]
     ogm.delete(website_old)
-    ogm.commit()
     ogm.flush()
 
 Updating entities :
@@ -36,14 +35,12 @@ Updating entities :
     website_upd = websites[1]
     website_upd.name = 'FoodNetwork'
     ogm.add(website_upd)
-    ogm.commit()
     ogm.flush()
 
 Creating entities :
 
     website_add = Website(name="AllRecipes", domain="http://www.allrecipes.com")
     ogm.add(website_new)
-    ogm.commit()
     ogm.flush()
 
 Performing lazy-loaded traversals :
