@@ -1,14 +1,14 @@
 from distutils.core import setup
 
-REQUIRES = ['bulbs>=0.3.14']
+REQUIRES = ['bulbs<0.4']
 
 setup(
     name='graphalchemy',
     version='0.1dev',
-    description='Object-Graph Mapper (OGM) for Python'
+    description='Object-Graph Mapper (OGM) for Python '
                 'compatible with Blueprint enabled graphs',
     long_description=open('README.md').read(),
-    packages=['graphalchemy',],
+    packages=['graphalchemy', ],
     classifiers=[
         'Development Status :: 0.1 - Dev',
         'Environment :: Web Environment',
