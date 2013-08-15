@@ -18,8 +18,78 @@ from graphalchemy.metadata import BulbsMetadata
 class BulbsRelationshipRepository(RelationshipProxy): # NodeProxy):
 
     def __init__(self, element_class, client, graph=None, logger=None):
+        """ Initializes the repository with the bulbs proxy and our metadata.
+        
+        :param graph: Bulbs graph object.
+        :type graph: bulbs.base.graph.Graph
+        :param name: Name of the repository.
+        :type name: str
+        :param metadata: Metadata associated with the current model.
+        :type metadata: graphalchemy.metadata.GraphMetadata
+        :param logger: Optional logger to listen on queries.
+        :type logger: jerome.application.service.logger.LoggerInterface
+        """
+        self.graph = graph
+        if hasattr(element_class, 'label'):
+            repository_name = str(element_class.label)
+        else: 
+            raise Exception('Element class seems not to be a Relationship.')
+            
+        if graph:
+            self.graph.add_proxy(repository_name, element_class)
+            client = self.graph.client
+        self.name = repository_name
+        
         super(BulbsRelationshipRepository, self).__init__(element_class, client)
-
+        
+        self.metadata = BulbsMetadata(element_class)
+        self.logger = logger
+    
+        
+    def get(self, *args, **kwargs):
+        """ Retrieves an element from its eid.
+        
+        :param eid: The element eid.
+        :type eid: int
+        :returns: bulbs.model.Relationship -- A new object, already pre-persisted
+        in the database.
+        """
+        result = super(BulbsRelationshipRepository, self).get(*args, **kwargs)
+        if not result:
+            raise Exception('Relationship not found.')
+        if result.label != self.name:
+            raise Exception('The entity matching the query does not correspond to the repository.')
+        return result
+    
+        
+    def __call__(self, *args, **kwargs):
+        """ Thin wrapper for entity creation :
+        >>> hosts = repository(outV, inV, since=123)
+        
+        NB : this will simultaneously persist the entity in the database, so you
+        will get an object that already has an eid.
+        
+        :returns: bulbs.model.Relationship -- A new object, already pre-persisted
+        in the database.
+        """
+        return self.create(*args, **kwargs)
+    
+    
+    def _log(self, message, level=10):
+        """ Thin wrapper for logging purposes.
+        
+        :param message: The message to log.
+        :type message: str
+        :param level: The level of the log.
+        :type level: int
+        :returns: graphalchemy.repository.BulbsRelationshioRepository -- this 
+        object itself.
+        """
+        if self.logger:
+            self.logger.log(level, message)
+        return self
+    
+    
 
 
 class BulbsNodeRepository(NodeProxy): # NodeProxy):
@@ -53,10 +123,8 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
         self.graph = graph
         if hasattr(element_class, 'element_type'):
             repository_name = str(element_class.element_type)
-        elif hasattr(element_class, 'label'):
-            repository_name = str(element_class.label)
         else: 
-            raise Exception('Element class seems not to be Node nor Relationship.')
+            raise Exception('Element class seems not to be a Node.')
             
         if graph:
             self.graph.add_proxy(repository_name, element_class)
@@ -78,6 +146,8 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
         in the database.
         """
         result = super(BulbsNodeRepository, self).get(*args, **kwargs)
+        if not result:
+            raise Exception('Relationship not found.')
         if result.element_type != self.name:
             raise Exception('The entity matching the query does not correspond to the repository.')
         return result
