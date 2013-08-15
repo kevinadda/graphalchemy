@@ -33,10 +33,10 @@ class Node(Node):
     """ Thin wrapper around the base bulbs.model.Node class. It is essentially
     designed to provide more flexibility in the coding.
     
-    >>> from my.models.nodes import Recipe
-    >>> recipe = Recipe(title="Apple pie")
-    >>> recipe.timeTotal = 30
-    >>> ogm.add(recipe)
+    >>> from my.models.nodes import Website
+    >>> website = Website(name="AllRecipes")
+    >>> website.domain = 'http://www.allrecipes.com'
+    >>> ogm.add(website)
     >>> ogm.flush()
     """
     
