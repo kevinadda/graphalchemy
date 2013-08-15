@@ -128,14 +128,9 @@ SQL-alchemy like API for querying, with automatic index selection :
 
 # Installation
 
-As of today, GraphAlchemy is built on top of bulbs, and, as such, requires bulbs
-0.3.14 as a dependency.
+As of today, GraphAlchemy is built on top of bulbs, and, as such, requires bulbs 0.3.14 as a dependency (managed by pip).
 
-```
-pip install bulbs
-```
-
-Then, you can install GraphAlchemy :
+To install GraphAlchemy :
 
 ```
 pip install git+https://github.com/chefjerome/graphalchemy.git
