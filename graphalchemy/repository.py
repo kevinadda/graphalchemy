@@ -27,15 +27,15 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
     SQL-alchemesque interface.
     
     These repositories can be loaded directly from the OGM :
-    >>> repository = ogm.repository('User')
+    >>> repository = ogm.repository('Website')
     
     Easy entity creation and pre-persistence :
-    >>> user = repository(firstname="Bob")
-    >>> user = repository.create(firstname="Joe")
+    >>> website = repository(name="AllRecipes")
+    >>> website = repository.create(name="FoodNetwork")
     
     SQL-alchemy like API for querying, with automatic index selection :
-    >>> users = repository.filter(firstname="Joe")
-    >>> users = repository.filter(firstname="Joe", lastname="Miller")
+    >>> websites = repository.filter(name="AllRecipes")
+    >>> websites = repository.filter(name="FoodNetwork", domain="http://www.foodnetowrk.com")
     """
     
     def __init__(self, element_class, client, graph=None, logger=None):
@@ -70,6 +70,13 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
         
         
     def get(self, *args, **kwargs):
+        """ Retrieves an element from its eid.
+        
+        :param eid: The element eid.
+        :type eid: int
+        :returns: bulbs.model.Relationship -- A new object, already pre-persisted
+        in the database.
+        """
         result = super(BulbsNodeRepository, self).get(*args, **kwargs)
         if result.element_type != self.name:
             raise Exception('The entity matching the query does not correspond to the repository.')
@@ -78,13 +85,13 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
         
     def __call__(self, *args, **kwargs):
         """ Thin wrapper for entity creation :
-        >>> recipe = repository(firstname='Foo', lastname='Bar')
+        >>> website = repository(name='AllRecipes', domain='http://www.allrecipes.com')
         
         NB : this will simultaneously persist the entity in the database, so you
         will get an object that already has an eid.
         
-        :returns: bulbs.model.Node, bulbs.model.Relationship -- A new object, 
-        already pre-persisted in the database.
+        :returns: bulbs.model.Node -- A new object, already pre-persisted in the
+        database.
         """
         return self.create(*args, **kwargs)
         
@@ -97,9 +104,9 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
         Will add extra filtering as simple as queries.
         
         Example :
-        >>> iterator = repository.filter(firstname='Foo', lastname='Bar')
+        >>> iterator = repository.filter(domain='http://www.foo.com', name='Foo')
         >>> iterator = repository.filter(eid=123)
-        >>> iterator = repository.filter(indexed_property='Baz')
+        >>> iterator = repository.filter(indexed_property='Foo')
         
         @todo : it should return an iterator and wait for extra filtering.
         @todo : only limited to filtering on one entity for now.
@@ -176,7 +183,7 @@ class BulbsNodeRepository(NodeProxy): # NodeProxy):
         :type message: str
         :param level: The level of the log.
         :type level: int
-        :returns: graphalchemy.repository.BulbsNodeRepository -- this repository
+        :returns: graphalchemy.repository.BulbsNodeRepository -- this object
         itself.
         """
         if self.logger:

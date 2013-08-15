@@ -56,9 +56,9 @@ class NodeTest(GraphAlchemyTestCase):
         
         
     # ======================================================================
-    # For future reference, the entity creation process in bulbs : 
+    # For future reference, the Node creation process in bulbs : 
     # ======================================================================
-    # _properties : set in meta
+    # NodeProxy.create
     #   Element.__init__
     #       self._client = client
     #       self._data = {}
@@ -66,12 +66,12 @@ class NodeTest(GraphAlchemyTestCase):
     #       self._vertices = None
     #       self._edges = None
     #       self._initialized = True
-    #   recipe._create(_data, kwds)
+    #   Node._create(_data, kwds)
     #       data, index_name, keys = self.get_bundle(_data, **kwds)
     #       resp = self._client.create_indexed_vertex(data, index_name, keys)
     #       result = resp.one()
     #       self._initialize(result)
-    #           Vertex._initialize(self,result)
+    #           Element._initialize(self,result)
     #               self._result = result
     #               self._data = result.get_data().copy() 
     #               self._set_pretty_id(self._client)
