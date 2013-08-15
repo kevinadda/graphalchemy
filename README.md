@@ -18,7 +18,7 @@ at your own risk. Contributions welcome.
 Loading the OGM :
 
     from graphalchemy.ogm import BulbsObjectManager
-    ogm = BulbsObjectManager("http://localhost:8182/graphs", "graph")
+    ogm = BulbsObjectManager("http://localhost:8182/graphs", "graph", model_paths=['my.models.nodes'])
 
 Querying with simple filters :
 
@@ -76,9 +76,23 @@ another class :
 Ultimately, the object-to-graph mapping will be performed through a metadata builder, 
 which will not require the model object to extend a specific class :
 
-    from my.models.nodes import Website, Page
-    from my.models.relations import WebsiteHasPage
-    from graphalchemy.metadata import Metadata, Property, Relationship
+
+    class Website(object):
+        def __init__(self)
+            self.name = None
+            self.domain = None
+
+    class Page(object):
+        def __init__(self)
+            self.title = None
+            self.url = None
+
+    from graphalchemy.property import String
+    from graphalchemy.property import Url
+    from graphalchemy.property import DateTime
+    from graphalchemy.metadata import Property
+    from graphalchemy.metadata import Relationship
+    from graphalchemy.metadata import Metadata
 
     metadata = Metadata()
 
