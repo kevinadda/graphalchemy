@@ -139,9 +139,18 @@ class BulbsObjectManager(object):
         :type entity: bulbs.model.Node, bulbs.model.Relationship
         :returns: graphalchemy.ogm.BulbsObjectManager -- this object itself.
         """
-        self.session_add.append(entity)
-        if entity in self.session_delete:
-            self.session_delete.remove(entity)
+        found = False
+        for entity_add in self.session_add:
+            if entity_add is entity:
+                found = True
+                break
+        if not found:
+            self.session_add.append(entity)
+        
+        for entity_delete in self.session_delete:
+            if entity_delete is entity:
+                self.session_delete.remove(entity)
+                break
         return self
 
 
@@ -152,9 +161,16 @@ class BulbsObjectManager(object):
         :type entity: bulbs.model.Node, bulbs.model.Relationship
         :returns: graphalchemy.ogm.BulbsObjectManager -- this object itself.
         """
-        self.session_delete.append(entity)
-        if entity in self.session_add:
-            self.session_add.remove(entity)
+        found = False
+        for entity_delete in self.session_delete:
+            if entity is entity_delete:
+                found = True
+                break
+        if not found:
+            self.session_add.append(entity)
+        for entity_add in self.session_add:
+            if entity is entity_add:
+                self.session_add.remove(entity)
         return self
 
 
