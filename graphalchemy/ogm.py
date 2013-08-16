@@ -190,7 +190,6 @@ class BulbsObjectManager(object):
         """
         
         # We need to save nodes first
-        print self.session_add
         for entity in self.session_add:
             if isinstance(entity, Node):
                 self._log("Flushed "+str(entity))
