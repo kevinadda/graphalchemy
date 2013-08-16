@@ -270,7 +270,14 @@ class BulbsObjectManager(object):
         :type entity: bulbs.model.Node, bulbs.model.Relationship
         :returns: graphalchemy.ogm.BulbsObjectManager -- this object itself.
         """
-        raise NotImplementedException('Method not implemented.')
+        
+        caches = [key for key in entity.__dict__ if '_cache' in key]
+        for cache in caches:
+            delattr(entity, cache)
+                
+        # Reload all other properties from DB.
+        
+        return self
             
             
     def close_all(self):
