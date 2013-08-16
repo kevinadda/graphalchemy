@@ -174,22 +174,31 @@ class BulbsObjectManager(object):
         """
         
         # We need to save nodes first
+        print self.session_add
         for entity in self.session_add:
             if isinstance(entity, Node):
+                self._log("Flushed "+str(entity))
                 self._flush_one_node(entity)
         for entity in self.session_add:
             if isinstance(entity, Relationship):
+                self._log("Flushed "+str(entity))
                 self._flush_one_relation(entity)
         # Do not reset the session, we keep them tracked            
         # self.session_add = []
         
+        # We need to delete nodes first
         for entity in self.session_delete:
-            # Case where the entity was created from scratch (our hack)
             if entity._client is None:
                 continue
-            # Regular case, the entity is either loaded or created via repository
-            else: 
-                entity.delete()
+            if isinstance(entity, Relationship):
+                self._log("Deleted "+str(entity))
+                entity._edges.delete(entity.eid)
+        for entity in self.session_delete:
+            if entity._client is None:
+                continue
+            if isinstance(entity, Node):
+                self._log("Deleted "+str(entity))
+                entity._vertices.delete(entity.eid)
         # All deleted entities are detached
         self.session_delete = []
         
