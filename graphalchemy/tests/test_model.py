@@ -45,6 +45,10 @@ class NodeTest(GraphAlchemyTestCase):
         recipe = Recipe('bla')
         self.assertEquals('bla', recipe._client)
         
+        # Ability to create and read non-persisted properties
+        recipe.foo = 'Foo'
+        self.assertEquals('Foo', recipe.foo)
+        
         
     def test_create(self):
         
