@@ -230,6 +230,15 @@ class NodeTest(GraphAlchemyTestCase):
         self.assertIn(host1, hosts)
         self.assertIs(hosts[host1], website1)
         
+        # Add a duplicate
+        page.describes_add(describe1, content1)
+        describes = page.describes()
+        self.assertEquals(2, len(describes))
+        
+        page.isHostedBy_add(host1, website1)
+        hosts = page.isHostedBy()
+        self.assertEquals(1, len(hosts))
+        
         # Delete a relation
         page.describes_del(describe2)
         describes = page.describes()

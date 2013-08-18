@@ -234,6 +234,8 @@ class Node(Node):
         """
         cache_name = '_cache'+'_'+direction+'_'+name
         relations = self._relation(name, direction)
+        if relation in relations:
+            return self
         relations[relation] = node
         setattr(self, cache_name, relations)
         return self
