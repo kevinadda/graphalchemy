@@ -233,29 +233,10 @@ class Node(Node):
         :rtype: graphalchemy.model.Node
         """
         cache_name = '_cache'+'_'+direction+'_'+name
-        
-        # If the entity has not been loaded
-        if self._client is None:
-            # If there is no cache, create it
-            if not hasattr(self, cache_name):
-                setattr(self, cache_name, {relation: node})
-                return self
-            # If there is cache, push to it
-            dic = getattr(self, cache_name)
-            dic[relation] = node
-            setattr(self, cache_name, dic)
-            return self
-        # If the entity has been loaded
-        else:
-            # If the cache exists, we assue it is in sync
-            if hasattr(self, cache_name):
-                dic = getattr(self, cache_name)
-                dic[relation] = node
-                setattr(self, cache_name, dic)
-                return self
-            
-            # If there is no cache ???
-            raise NotImplementedException
+        relations = self._relation(name, direction)
+        relations[relation] = node
+        setattr(self, cache_name, relations)
+        return self
             
         
     def _relation_del(self, name, direction, relation):
@@ -281,31 +262,10 @@ class Node(Node):
         :rtype: graphalchemy.model.Node
         """
         cache_name = '_cache'+'_'+direction+'_'+name
-        
-        # If the entity has not been loaded
-        if self._client is None:
-            # If there is no cache, create it
-            if not hasattr(self, cache_name):
-                return self
-            # If there is cache, remove from it
-            dic = getattr(self, cache_name)
-            if relation not in dic:
-                return self
-            del dic[relation]
-            setattr(self, cache_name, dic)
+        relations = self._relation(name, direction)
+        if relation not in relations:
             return self
-            
-        # If the entity has been loaded
-        else:
-            # If the cache exists, we assue it is in sync
-            if hasattr(self, cache_name):
-                dic = getattr(self, cache_name)
-                if relation not in dic:
-                    return self
-                del dic[relation]
-                setattr(self, cache_name, dic)
-                return self
-                
-            # If there is no cache ???
-            raise NotImplementedException
+        del relations[relation]
+        setattr(self, cache_name, relations)
+        return self
         
