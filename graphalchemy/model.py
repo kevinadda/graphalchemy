@@ -164,7 +164,7 @@ class Node(Node):
         :param name: The name of the relation.
         :type name: str
         :param direction: Whether the relation is inbound, outbound or both.
-        :type direction: str
+        :type direction: str (in|out|both)
         :returns: A dictionnary which keys are the relations and values are the
                   related nodes.
         :rtype: dict<graphalchemy.model.Relationship, graphalchemy.model.Node> 
@@ -190,6 +190,9 @@ class Node(Node):
                 elif direction == 'in':
                     edges = self.outE(name),
                     vertices = self.outV(name)
+                elif direction == 'both':
+                    edges = self.bothE(name),
+                    vertices = self.bothV(name)
                 else:
                     raise Exception('Unknown direction : '+direction)
                     
