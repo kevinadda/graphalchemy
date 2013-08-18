@@ -176,8 +176,6 @@ class Node(Node):
             # If there is no cache, create it
             if not hasattr(self, cache_name):
                 setattr(self, cache_name, {})
-            print cache_name
-            print getattr(self, cache_name)
             # If there is cache, use it
             return getattr(self, cache_name)
                 
