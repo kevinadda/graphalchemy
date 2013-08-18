@@ -8,6 +8,10 @@
 from graphalchemy.tests.abstract import GraphAlchemyTestCase
 
 # Models
+from graphalchemy.model import Node
+from bulbs.property import String
+from graphalchemy.property import Url
+from graphalchemy.property import Boolean
 from graphalchemy.fixture.model import Recipe
 from graphalchemy.fixture.model import WebsiteHostsPage
 
