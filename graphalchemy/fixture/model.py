@@ -8,9 +8,11 @@
 from graphalchemy.model import Node
 from graphalchemy.model import Relationship
 
+from bulbs.property import Integer
 from bulbs.property import Float
 from bulbs.property import String
 from graphalchemy.property import Url
+from graphalchemy.property import Boolean
 
 
 # ==============================================================================
@@ -53,6 +55,8 @@ class Recipe(Node):
 
 class WebsiteHostsPage(Relationship):
     label                       = 'hosts'
+    since                       = Integer()
+    accessible                  = Boolean()
     # from_type                 = Website
     # to_type                   = Page
 
