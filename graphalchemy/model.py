@@ -80,6 +80,22 @@ class Relationship(Relationship):
 #                                      NODES
 # ==============================================================================
 
+class VirtualNode(object):
+    """ A VirtualNode is the image of the node that is supposed to exist in the
+    database, but has not been loaded. It will be merged or retrieved at query
+    time.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        self.eid = None
+        for arg in args:
+            for key in arg:
+                setattr(self, key, arg[key])
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+    
+
+
 class Node(Node):
     """ Thin wrapper around the base bulbs.model.Node class. It is essentially
     designed to provide more flexibility in the coding.
