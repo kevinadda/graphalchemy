@@ -55,6 +55,8 @@ class UnitOfWork(object):
 
                 # Update identity map
                 id = response.content['results']['_id']
+                self._log('  Property '+str('id')+' updated to '+str(id))
+                obj.id = id
                 self.identity_map[obj] = InstanceState(obj)
                 self.identity_map[obj].update_id(id)
                 self.identity_map[obj].update_attributes(data)
