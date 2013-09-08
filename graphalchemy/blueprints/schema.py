@@ -85,8 +85,11 @@ class Property(object):
         self.nullable = kwargs.get('nullable', True)
         self.indexed = kwargs.get('indexed', False)
 
-    def coerce(self, value):
-        return self.type.coerce(value)
+    def to_py(self, value):
+        return self.type.to_py(value)
+
+    def to_db(self, value):
+        return self.type.to_db(value)
 
     def validate(self, value):
         if self.nullable == False \

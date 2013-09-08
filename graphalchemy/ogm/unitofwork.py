@@ -26,7 +26,7 @@ class UnitOfWork(object):
                     python_value = getattr(obj, property.name_py)
                     property.validate(python_value)
                     if identity.attribute_has_changed(property.name_py, python_value):
-                        data[property.name_db] = property.coerce(python_value)
+                        data[property.name_db] = property.to_db(python_value)
                         self._log('  Property '+str(property)+' changed to '+str(python_value)+', updating.')
                     else:
                         self._log('  Property '+str(property)+' has not changed.')
@@ -47,8 +47,7 @@ class UnitOfWork(object):
                     self._log('  Property '+str(property)+' is new.')
                     python_value = getattr(obj, property.name_py)
                     property.validate(python_value)
-                    data[property.name_db] = property.coerce(python_value)
-                    
+                    data[property.name_db] = property.to_db(python_value)
                 # Insert
                 response = self.client.create_vertex(data)
                 

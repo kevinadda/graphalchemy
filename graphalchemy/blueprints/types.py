@@ -22,8 +22,17 @@ class Type(object):
     """
 
 
-    def coerce(self, value):
-        """ Coerces the value to the appropriate type.
+    def to_py(self, value):
+        """ Coerces the value to the appropriate python type.
+
+        :param value: The value to coerce.
+        :returns: The coerced value.
+        """
+        return value
+
+
+    def to_db(self, value):
+        """ Coerces the value to the appropriate database type.
 
         :param value: The value to coerce.
         :returns: The coerced value.
@@ -59,7 +68,7 @@ class Numeric(Type):
         self.min_value = min_value
         self.max_value = max_value
 
-    def coerce(self, value):
+    def to_py(self, value):
         raise NotImplementedError()
 
     def validate(self, value):
@@ -74,7 +83,7 @@ class Numeric(Type):
 
 class Integer(Numeric):
 
-    def coerce(self, value):
+    def to_py(self, value):
         return int(value)
 
     def validate(self, value):
@@ -85,7 +94,7 @@ class Integer(Numeric):
 
 class Float(Numeric):
 
-    def coerce(self, value):
+    def to_py(self, value):
         return float(value)
 
     def validate(self, value):
@@ -96,7 +105,7 @@ class Float(Numeric):
 
 class Boolean(Integer):
 
-    def coerce(self, value):
+    def to_py(self, value):
         return bool(value)
 
     def validate(self, value):
@@ -131,7 +140,7 @@ class String(Type):
         """
         self.size = size
 
-    def coerce(self, value):
+    def to_py(self, value):
         return unicode(value)
 
     def validate(self, value):
