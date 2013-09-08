@@ -7,25 +7,37 @@
 
 from datetime import datetime
 
-class Website(object):
-    def __init__(self):
+class Base(object):
+    def __init__(self, *args, **kwargs):
+        for arg in args:
+            for key in arg:
+                setattr(self, key, arg[key])
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+
+class Website(Base):
+    def __init__(self, *args, **kwargs):
         self.element_type = "Website"
         self.name = None
         self.domain = None
         self.description = None
         self.content = None
+        super(Website, self).__init__(*args, **kwargs)
 
-class Page(object):
-    def __init__(self):
+class Page(Base):
+    def __init__(self, *args, **kwargs):
         self.element_type = "Page"
         self.title = None
         self.url = None
+        super(Page, self).__init__(*args, **kwargs)
 
-class WebsiteHostsPage(object):
-    def __init__(self):
+class WebsiteHostsPage(Base):
+    def __init__(self, *args, **kwargs):
         self.label = 'hosts'
         self.since = None
         self.accessible = None
+        super(WebsiteHostsPage, self).__init__(*args, **kwargs)
 
 
 from graphalchemy.blueprints.schema import MetaData
