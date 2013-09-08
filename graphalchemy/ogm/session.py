@@ -23,6 +23,16 @@ class Session(object):
         return self
 
 
+
+
+    def clear(self):
+        self.identity_map.clear()
+        self._update = []
+        self._delete = []
+        self._new = []
+        return self
+
+
     def flush(self):
 
         uow = UnitOfWork(self.client, self.identity_map, self.metadata_map, logger=self.logger)
