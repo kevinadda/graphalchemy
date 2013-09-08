@@ -1,15 +1,75 @@
+#! /usr/bin/env python
+#-*- coding: utf-8 -*-
+
+# ==============================================================================
+#                                      IMPORTS
+# ==============================================================================
 
 
+# ==============================================================================
+#                                     SERVICE
+# ==============================================================================
 
 class Repository(object):
     """ Repositories are shortcuts that allow simple querying of entities.
+
+    Repositories can be loaded directly from the OGM :
+    >>> repository = ogm.repository('Website')
+
+    Easy entity creation and pre-persistence :
+    >>> website = repository(domain="http://www.foodnetwork.com")
+    >>> website = repository.create(domain="http://www.allrecipes.com")
+
+    SQL-alchemy like API for querying, with automatic index selection :
+    >>> repository = ogm.repository('User')
+    >>> users = repository.filter(firstname="Joe")
+    >>> users = repository.filter(firstname="Joe", lastname="Miller")
+    """
+
     def __init__(self, session, model, class_, logger=None):
+        """ Loads a repository.
+
+        :param session: The session to perform requests against.
+        :type session: graphalchemy.ogm.session.Session
+        :param model: The model instance of the current class.
+        :type model: graphalchemy.blueprints.schema.Model
+        :param class_: The class that is actually mapped.
+        :type class_: object
+        :param logger: An optionnal logger.
+        :type logger: logging.Logger
+        """
         self.session = session
         self.model = model
         self.class_ = class_
         self.logger = logger
-        
-        
+
+
+    def __call__(self, *args, **kwargs):
+        """ Creates an instance of the mapped class, initialized with the
+        given parameters.
+
+        Example use:
+        >>> website = repository(domain="http://www.foodnetwork.com")
+
+        :param class_: The class that is actually mapped.
+        :type class_: object
+        """
+        return self.create(*args, **kwargs)
+
+
+    def create(self, *args, **kwargs):
+        """ Creates an instance of the mapped class, initialized with the
+        given parameters.
+
+        Example use :
+        >>> website = repository.create(domain="http://www.allrecipes.com")
+
+        :param class_: The class that is actually mapped.
+        :type class_: object
+        """
+        return self.class_(*args, **kwargs)
+
+
     def get(self, id):
         # Retrieve from DB
         response = self.client.get_vertex(id)
