@@ -2,9 +2,9 @@
 
 
 class Repository(object):
-    
-    def __init__(self, client, model, class_, logger=None):
-        self.client = client
+    """ Repositories are shortcuts that allow simple querying of entities.
+    def __init__(self, session, model, class_, logger=None):
+        self.session = session
         self.model = model
         self.class_ = class_
         self.logger = logger
