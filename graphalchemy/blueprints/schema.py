@@ -7,14 +7,48 @@
 
 
 class Model(object):
-    pass
+    """ Holds all the schema characteristics that we want to enforce on an
+    Element.
+
+    This is an abstract class that is extended by specializations for Nodes
+    and Relationships.
+    """
+
+    # The key under which the Model name will be saved
+    model_name_storage_key = None
+    model_type = None
+
+    def __init__(self, model_name, metadata, *args, **kwargs):
+        self.model_name = model_name
+        self.metadata = metadata
+        self.logger = kwargs.get('logger', None)
+
+
+    def register_class(self, class_):
+        raise NotImplementedError()
+
+
+    def is_node(self):
+        raise NotImplementedError()
+
+
+    def is_relationship(self):
+        raise NotImplementedError()
+
+
+    def __repr__(self):
+        return self.model_name
+
 
 
 class Node(Model):
 
-    def __init__(self, name, metadata, *args, **kwargs):
-        self.element_type = name
-        self.metadata = metadata
+    # The key under which the Model name will be saved
+    model_name_storage_key = 'element_type'
+    model_type = 'vertex'
+
+    def __init__(self, model_name, metadata, *args, **kwargs):
+        super(Node, self).__init__(model_name, metadata, *args, **kwargs)
         self.properties = []
         for arg in args:
             self.properties.append(arg)
@@ -29,19 +63,20 @@ class Node(Model):
     def is_relationship(self):
         return False
 
-    def __repr__(self):
-        return self.element_type
 
 
 class Relationship(Model):
+
+    # The key under which the Model name will be saved
+    model_name_storage_key = 'label'
+    model_type = 'edge'
 
     IN = 'in'
     OUT = 'out'
     BOTH = 'both'
 
-    def __init__(self, name, metadata, *args, **kwargs):
-        self.label = name
-        self.metadata = metadata
+    def __init__(self, model_name, metadata, *args, **kwargs):
+        super(Relationship, self).__init__(model_name, metadata, *args, **kwargs)
         self.properties = []
         for arg in args:
             self.properties.append(arg)
@@ -56,8 +91,6 @@ class Relationship(Model):
     def is_relationship(self):
         return True
 
-    def __repr__(self):
-        return self.label
 
 
 class Adjacency(object):
