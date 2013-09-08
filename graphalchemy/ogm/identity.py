@@ -13,3 +13,11 @@ class IdentityMap(dict):
         state = InstanceState(obj)
         dict.__setitem__(self, obj, state)
 
+
+    def get_by_id(self, id):
+    	for obj, state in self.iteritems():
+    		print obj
+    		if obj.id == id:
+    			return obj
+		return None
+
