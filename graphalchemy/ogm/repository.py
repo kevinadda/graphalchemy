@@ -5,6 +5,8 @@
 #                                      IMPORTS
 # ==============================================================================
 
+from graphalchemy.ogm.query import Query
+
 
 # ==============================================================================
 #                                     SERVICE
@@ -71,26 +73,55 @@ class Repository(object):
 
 
     def get(self, id):
-        # Retrieve from DB
-        response = self.client.get_vertex(id)
+        """ Retrieves an element from its id.
+
+        Example use :
+        >>> website = repository.get(123)
+
+        :param id: The element id.
+        :type id: int
+        :returns: The object with the given id in the database.
+        :rtype: object
+        """
+
+        # Retrieve from DB or identity map
+        response, loaded = self.session.get_vertex(id)
+        if not loaded:
+            self._log('Object found in entity map')
+            return response
+        self._log('Object not found in entity map')
         results = response.content['results']
-        
+
         # Verify type
-        type = results.pop('type')
-        if type != 'vertex' and model.is_node() == False:
-            raise Exception('Expected vertex, got '+str(type))
-        elif type != 'edge' and model.is_relationship() == False:
-            raise Exception('Expected edge, got '+str(type))
-        else:
-            raise Exception('Unknown type '+str(type))
-        
+        _type = results.pop('_type')
+        self._check_type(_type)
+
+        # Verify model_name
+        model_name = results.pop(self.model.model_name_storage_key)
+        self._check_model_name(model_name)
+
         # Verify id
         _id = results.pop('_id')
-        if _id != id:
-            raise Exception('Expected '+str(id)+', got '+str(_id))
-        
+        self._check_id(_id, id)
+
         # Build object
-        obj = self.class_()
+        obj = self._build_object(results)
+        obj.id = id
+
+        self.session.add_to_identity_map(obj)
+        return obj
+
+    def filter(self, *args, **kwargs):
+        return Query(self.session, *args, **kwargs)
+
+
+    def _build_object(self, results):
+        obj = self.class_(results)
+        self._update_object(obj, results)
+        return obj
+
+
+    def _update_object(self, obj, results):
         for property_db, value_db in results.iteritems():
             found = False
             for property in self.model.properties:
@@ -100,14 +131,41 @@ class Repository(object):
                 break
             if not found:
                 raise Exception('Property retrieved but not found : '+property_db)
-            value_py = property.coerce_to_py(value_db)
+            value_py = property.to_py(value_db)
             setattr(obj, property.name_py, value_py)
-            
-        
-        # Add to the entity map
-        id = response.content['results']['_id']
-        self.identity_map[obj] = InstanceState(obj)
-        self.identity_map[obj].update_id(id)
-        self.identity_map[obj].update_attributes(data)
-        
-        return initialize_element(self.client, resp.results)
+        return obj
+
+
+    def _check_model_name(self, model_name):
+        if model_name != self.model.model_name:
+            raise Exception('Expected vertex, got '+str(model_name))
+        return True
+
+
+    def _check_id(self, _id, id):
+        if _id != id:
+            raise Exception('Expected '+str(id)+', got '+str(_id))
+        return True
+
+
+    def _check_type(self, _type):
+        if _type == 'vertex' and self.model.is_node():
+            return True
+        elif _type == 'edge' and self.model.is_relationship():
+            return True
+        raise Exception('Received '+_type+' for '+self.model.model_type)
+
+
+    def _log(self, message, level=10):
+        """ Thin wrapper for logging purposes.
+
+        :param message: The message to log.
+        :type message: str
+        :param level: The level of the log.
+        :type level: int
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Validator
+        """
+        if self.logger is not None:
+            self.logger.log(level, message)
+        return self
