@@ -6,6 +6,10 @@
 # ==============================================================================
 
 
+# ==============================================================================
+#                                      MODEL
+# ==============================================================================
+
 class Model(object):
     """ Holds all the schema characteristics that we want to enforce on an
     Element.
@@ -21,6 +25,8 @@ class Model(object):
     def __init__(self, model_name, metadata, *args, **kwargs):
         self.model_name = model_name
         self.metadata = metadata
+        self.properties = {}
+        self.indices = {}
         self.logger = kwargs.get('logger', None)
 
 
@@ -40,6 +46,20 @@ class Model(object):
         return self.model_name
 
 
+    def add_property(self, prop):
+        if prop.name_py in self.properties:
+            raise Exception('Cannot override previously set property.')
+        self.properties[prop.name_py] = prop
+        if prop.indexed:
+            self.indices[prop.name_py] = prop
+        prop.model = self
+        return self
+
+
+    def _useful_indices_among(self, amongs):
+        return [among for among in amongs if (among in self.indices)]
+
+
 
 class Node(Model):
 
@@ -49,10 +69,8 @@ class Node(Model):
 
     def __init__(self, model_name, metadata, *args, **kwargs):
         super(Node, self).__init__(model_name, metadata, *args, **kwargs)
-        self.properties = []
-        for arg in args:
-            self.properties.append(arg)
-            arg.model = self
+        for prop in args:
+            self.add_property(prop)
 
     def register_class(self, class_):
         self.metadata.bind_node(class_, self)
@@ -62,7 +80,6 @@ class Node(Model):
 
     def is_relationship(self):
         return False
-
 
 
 class Relationship(Model):
@@ -77,10 +94,8 @@ class Relationship(Model):
 
     def __init__(self, model_name, metadata, *args, **kwargs):
         super(Relationship, self).__init__(model_name, metadata, *args, **kwargs)
-        self.properties = []
-        for arg in args:
-            self.properties.append(arg)
-            arg.model = self
+        for prop in args:
+            self.add_property(prop)
 
     def register_class(self, class_):
         self.metadata.bind_relationship(class_, self)
