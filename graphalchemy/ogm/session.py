@@ -1,6 +1,7 @@
 
 from graphalchemy.ogm.identity import IdentityMap
 from graphalchemy.ogm.unitofwork import UnitOfWork
+from graphalchemy.ogm.state import InstanceState
 
 class Session(object):
 
@@ -23,6 +24,19 @@ class Session(object):
         return self
 
 
+    def get_vertex(self, id):
+        obj = self.identity_map.get_by_id(id)
+        if obj:
+            return obj, False
+        return self.client.get_vertex(id), True
+
+
+    def add_to_identity_map(self, obj):
+        # Add to the identity_map
+        self.identity_map[obj] = InstanceState(obj)
+        self.identity_map[obj].update_id(id)
+        # self.identity_map[obj].update_attributes(data)
+        return self
 
 
     def clear(self):
