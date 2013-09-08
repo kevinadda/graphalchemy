@@ -108,37 +108,47 @@ class Relationship(Model):
 
 
 
+# ==============================================================================
+#                                    STRUCTURE
+# ==============================================================================
+
 class Adjacency(object):
 
-    def __init__(self, node, relationship, direction=None, multi=None, nullable=None):
+    def __init__(self, node, relationship, direction=None, multi=None, nullable=None, indexed=False, **kwargs):
         self.node = node
         self.relationship = relationship
         self.direction = direction
         self.multi = multi
         self.nullable = nullable
+        self.indexed = indexed
+
 
 
 class Property(object):
 
-    def __init__(self, name_py, type, **kwargs):
+    def __init__(self, name_py, type_, nullable=None, indexed=False, **kwargs):
         self.model = None
         self.name_py = name_py
         self.name_db = name_py
-        self.type = type
-        self.nullable = kwargs.get('nullable', True)
-        self.indexed = kwargs.get('indexed', False)
+        self.type = type_
+        self.nullable = nullable
+        self.indexed = indexed
+
 
     def to_py(self, value):
         return self.type.to_py(value)
 
+
     def to_db(self, value):
         return self.type.to_db(value)
+
 
     def validate(self, value):
         if self.nullable == False \
         and value is None:
             return False, [u'Property is not nullable.']
         return self.type.validate(value)
+
 
     def __repr__(self):
         return '<'+str(self.model)+'.'+self.name_py+'('+str(self.type)+')>'
