@@ -103,11 +103,6 @@ class Adjacency(object):
         self.nullable = nullable
 
 
-
-class ValidationException(Exception):
-    pass
-
-
 class Property(object):
 
     def __init__(self, name_py, type, **kwargs):
