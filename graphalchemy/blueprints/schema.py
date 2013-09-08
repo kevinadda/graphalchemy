@@ -155,8 +155,13 @@ class Property(object):
 
 
 
+# ==============================================================================
+#                                    SERVICES
+# ==============================================================================
 
 class MetaData(object):
+    """ Holds the metadata of all mapped objects.
+    """
 
     def __init__(self, bind=None, schema=None):
         self._nodes = {}
