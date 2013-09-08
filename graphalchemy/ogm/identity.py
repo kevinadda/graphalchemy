@@ -2,10 +2,11 @@ from graphalchemy.ogm.state import InstanceState
 
 
 class IdentityMap(dict):
-    
+
     def __init__(self):
         pass
-    
+
+
     def add(self, obj):
         if obj in self:
             return self
