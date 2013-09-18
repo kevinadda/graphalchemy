@@ -111,8 +111,27 @@ class Repository(object):
         self.session.add_to_identity_map(obj)
         return obj
 
-    def filter(self, *args, **kwargs):
-        return Query(self.session, *args, **kwargs)
+    def filter(self, **kwargs):
+        """ We have to pre-process the query here to use the right index.
+        """
+        query = Query(self.session)
+        # If one of the arguments is indexed, we use it first.
+        indices = self.model._useful_indices_among(kwargs)
+        if len(indices):
+            index_name = indices[0]
+            key = index_name
+            value = kwargs[index_name]
+            query.filter_on_index(index_name, key, value)
+            kwargs.pop(index_name)
+        # Else, we simply use the index on the model name.
+        else:
+            index_name = self.model.model_name_storage_key
+            key = index_name
+            value = self.model.model_name
+            query.filter_on_index()
+
+        query.filter(**kwargs)
+        return query
 
 
     def _build_object(self, results):

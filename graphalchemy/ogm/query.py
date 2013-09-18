@@ -50,8 +50,8 @@ class Query(object):
         return self
 
 
-    def indexed_filter(self, **kwargs):
-        self._indices.update(kwargs)
+    def indexed_filter(self, index_name, key, value):
+        self._indices[index_name] = {"key": key, "value":value}
         return self
 
 
