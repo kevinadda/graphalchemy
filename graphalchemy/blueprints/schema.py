@@ -54,6 +54,8 @@ class Model(object):
         self.properties[prop.name_py] = prop
         if prop.index:
             self.indices[prop.name_py] = prop
+        if prop.prefix == True:
+            prop.name_db = self.model_name + '_' + prop.name_db
         prop.model = self
         return self
 
@@ -132,12 +134,15 @@ class Adjacency(object):
 
 class Property(object):
 
-    def __init__(self, name_py, type_, nullable=None, index=None, primaryKey=False, group=None, unique=False, **kwargs):
+    def __init__(self, name_py, type_, nullable=None, index=None, primaryKey=False, group=None, unique=False, prefix=False, name_db=None):
 
         self.model = None
 
         self.name_py = name_py
-        self.name_db = name_py
+        self.prefix = prefix
+        if name_db is None:
+            name_db = name_py
+        self.name_db = name_db
 
         self.type = type_
         self.nullable = nullable
