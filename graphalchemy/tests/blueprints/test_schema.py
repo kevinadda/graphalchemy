@@ -77,8 +77,8 @@ class ValidatorTestCase(TestCase):
                 self.name = None
                 self.url = None
         website = Node('Website', self.metadata,
-            Property('name', String(127), nullable=False, indexed=True),
-            Property('url', Url(), nullable=False, indexed=True),
+            Property('name', String(127), nullable=False, index=True),
+            Property('url', Url(), nullable=False, index=True),
         )
         self.mapper(Website, website)
         obj = Website()
@@ -137,7 +137,7 @@ class TestMigrationGenerator(TestCase):
                 self.name = None
                 self.url = None
         website = Node('Website', self.metadata,
-            Property('name', String(127), nullable=False, index='search', group='name'),
+            Property('name', String(127), nullable=False, index='search', group='name', prefix=True),
             Property('url', Url(), nullable=False, index=True, unique=True),
             Property('tags', List(), nullable=False, index=None),
         )
@@ -148,17 +148,18 @@ class TestMigrationGenerator(TestCase):
                 self.since = None
                 self.accessible = None
         websiteHostsPage = Relationship('hosts', self.metadata,
-            Property('since', DateTime, nullable=False, default=datetime.now, primaryKey=True),
+            Property('since', DateTime, nullable=False, primaryKey=True),
             Property('accessible', Boolean())
         )
 
-        websiteHostsPage_out = Adjacency(Website, WebsiteHostsPage,
+        websiteHostsPage_out = Adjacency(website, websiteHostsPage,
             direction=Relationship.OUT,
             unique=True,
             nullable=False
         )
 
-        self.mapper(Website, website)
+
+
         self.mapper(WebsiteHostsPage, websiteHostsPage)
         self.mapper(Website, website, properties={
             'hosts': websiteHostsPage_out
