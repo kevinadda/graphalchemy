@@ -324,7 +324,8 @@ class MigrationGenerator(object):
         for relationship in self.metadata_map._relationships.values():
             self.run_relationship(relationship)
         # Run groups
-        # @todo
+        for i, name in enumerate(self._groups.keys()):
+            self.make_group(name, i + 2) # Indexing starts at 2
         return self
 
 
@@ -404,11 +405,6 @@ class MigrationGenerator(object):
         # Type
         query += '.makePropertyKey()'
         query += ';'
-    def make_group(self):
-        # TypeGroup.DEFAULT_GROUP = 1
-        query = 'TypeGroup family = TypeGroup.of(2,"family");'
-
-
         self._push_property(property.name_db, query)
         return self
 
@@ -428,6 +424,12 @@ class MigrationGenerator(object):
 
 
 
+    def make_group(self, name, id):
+        query = 'TypeGroup ' + name + ' = TypeGroup.of(' + str(id) + ',"' + name + '");'
+        self._queries.append(query)
+        return self
 
 
+    def __str__(self):
+        return "\n".join(self._queries)
 
