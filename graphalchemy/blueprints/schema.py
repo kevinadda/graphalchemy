@@ -311,11 +311,11 @@ class MigrationGenerator(object):
     def __init__(self, metadata_map, logger=None):
         self.metadata_map = metadata_map
         self.logger = logger
-        self._queries = []
 
-        self.properties = {}
-        self.labels = {}
-        self.groups = {}
+        self._queries = []
+        self._properties = {}
+        self._labels = {}
+        self._groups = {}
 
 
     def run(self):
@@ -370,7 +370,8 @@ class MigrationGenerator(object):
 
         query += '.makeEdgeLabel()'
         query += ';'
-        self._queries.append(query)
+        self._push_label(relationship.model_name, query)
+        return self
 
 
     def make_property_key(self, model, property):
@@ -379,6 +380,7 @@ class MigrationGenerator(object):
         # Groups
         if property.group is not None:
             query += '.group("'+property.group+'")'
+            self._groups[property.group] = None
 
         # Name
         query += '.name("'+property.name_db+'")'
@@ -402,21 +404,27 @@ class MigrationGenerator(object):
         # Type
         query += '.makePropertyKey()'
         query += ';'
-        self._queries.append(query)
-
     def make_group(self):
         # TypeGroup.DEFAULT_GROUP = 1
         query = 'TypeGroup family = TypeGroup.of(2,"family");'
 
 
-    def __str__(self):
-        return "\n".join(self._queries)
+        self._push_property(property.name_db, query)
+        return self
 
 
+    def _push_property(self, name_db, query):
+        if name_db in self._properties:
+            raise Exception('This property is already used : '+str(name_db))
+        self._properties[name_db] = query
+        self._queries.append(query)
 
 
-
-
+    def _push_label(self, name_db, query):
+        if name_db in self._labels:
+            raise Exception('This label is already used : '+str(name_db))
+        self._labels[name_db] = query
+        self._queries.append(query)
 
 
 
