@@ -280,6 +280,58 @@ class Validator(object):
         return self
 
 
+class MigrationGenerator(object):
+
+    def __init__(self, metadata_map, logger=None):
+        self.metadata_map = metadata_map
+        self.logger = logger
+        self._queries = []
+
+    def run(self):
+        for node in self.metadata_map._nodes:
+            self.run_node(node)
+        for relationship in self.metadata_map._relationships:
+            self.run_relationship(relationship)
+        return self
+
+    def run_node(self, node):
+        for prop in node.properties:
+            self.run_property_node(node, prop)
+        return self
+
+
+    def run_relationship(self, relationship):
+        for prop in relationship.properties:
+            self.run_property_relationship(relationship, prop)
+        return self
+
+    def run_property_relationship(self, relationship, property):
+        # g.makeType().name("battled").primaryKey(time).makeEdgeLabel();
+        pass
+
+    def run_property_node(self, node, property):
+        query = 'graph.makeType()'
+        query += '.name("'+property.name_db+'")'
+        query += '.dataType('+property.type_db+')'
+        query += '.indexed('+'Vertex.class'+')'
+        query += '.unique(Direction.BOTH).makePropertyKey()'
+        query += ';'
+        self._queries.append(query)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

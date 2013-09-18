@@ -83,6 +83,8 @@ class Numeric(Type):
 
 class Integer(Numeric):
 
+    name_db = "Integer.class"
+
     def to_py(self, value):
         return int(value)
 
@@ -131,6 +133,8 @@ class Const(Type):
 
 
 class String(Type):
+
+    name_db = "String.class"
 
     def __init__(self, size=None):
         """ Defines the specifications of the Type.
