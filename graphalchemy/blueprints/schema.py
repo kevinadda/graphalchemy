@@ -122,13 +122,12 @@ class Relationship(Model):
 
 class Adjacency(object):
 
-    def __init__(self, node, relationship, direction=None, multi=None, nullable=None, index=False, **kwargs):
+    def __init__(self, node, relationship, direction=None, unique=False, nullable=None):
         self.node = node
         self.relationship = relationship
         self.direction = direction
-        self.multi = multi
+        self.unique = unique
         self.nullable = nullable
-        self.index = index
 
 
 
@@ -162,7 +161,6 @@ class Property(object):
         self.primaryKey = primaryKey
 
 
-
     def to_py(self, value):
         return self.type.to_py(value)
 
@@ -176,7 +174,6 @@ class Property(object):
         and value is None:
             return False, [u'Property is not nullable.']
         return self.type.validate(value)
-
 
 
     def __repr__(self):
@@ -282,7 +279,7 @@ class Validator(object):
         metadata = self.metadata_map.for_object(obj)
         all_errors = {}
         ok = True
-        for property in metadata.properties:
+        for property in metadata.properties.values():
             python_value = getattr(obj, property.name_py)
             _ok, errors = property.validate(python_value)
             if _ok:
@@ -330,6 +327,7 @@ class MigrationGenerator(object):
         # @todo
         return self
 
+
     def run_node(self, node):
         for prop in node.properties.values():
             self.make_property_key(node, prop)
@@ -342,9 +340,11 @@ class MigrationGenerator(object):
         self.make_edge_label(relationship)
         return self
 
+
     def run_property_relationship(self, relationship, property):
         # g.makeType().name("battled").primaryKey(time).makeEdgeLabel();
         pass
+
 
     def make_edge_label(self, relationship):
         query = 'graph.makeType()'
