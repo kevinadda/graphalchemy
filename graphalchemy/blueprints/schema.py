@@ -5,6 +5,8 @@
 #                                      IMPORTS
 # ==============================================================================
 
+from graphalchemy.blueprints.types import List
+from graphalchemy.blueprints.types import Dict
 
 # ==============================================================================
 #                                      MODEL
@@ -50,7 +52,7 @@ class Model(object):
         if prop.name_py in self.properties:
             raise Exception('Cannot override previously set property.')
         self.properties[prop.name_py] = prop
-        if prop.indexed:
+        if prop.index:
             self.indices[prop.name_py] = prop
         prop.model = self
         return self
@@ -70,6 +72,8 @@ class Node(Model):
     def __init__(self, model_name, metadata, *args, **kwargs):
         super(Node, self).__init__(model_name, metadata, *args, **kwargs)
         for prop in args:
+            if prop.primaryKey == True:
+                raise Exception('Only edge properties can be primaryKeys.')
             self.add_property(prop)
 
     def register_class(self, class_):
@@ -94,6 +98,8 @@ class Relationship(Model):
 
     def __init__(self, model_name, metadata, *args, **kwargs):
         super(Relationship, self).__init__(model_name, metadata, *args, **kwargs)
+        self.directed = kwargs.get('directed', True)
+        self.signature = kwargs.get('signature', True)
         for prop in args:
             self.add_property(prop)
 
@@ -114,25 +120,42 @@ class Relationship(Model):
 
 class Adjacency(object):
 
-    def __init__(self, node, relationship, direction=None, multi=None, nullable=None, indexed=False, **kwargs):
+    def __init__(self, node, relationship, direction=None, multi=None, nullable=None, index=False, **kwargs):
         self.node = node
         self.relationship = relationship
         self.direction = direction
         self.multi = multi
         self.nullable = nullable
-        self.indexed = indexed
+        self.index = index
 
 
 
 class Property(object):
 
-    def __init__(self, name_py, type_, nullable=None, indexed=False, **kwargs):
+    def __init__(self, name_py, type_, nullable=None, index=None, primaryKey=False, group=None, unique=False, **kwargs):
+
         self.model = None
+
         self.name_py = name_py
         self.name_db = name_py
+
         self.type = type_
         self.nullable = nullable
-        self.indexed = indexed
+
+        self.unique_graph = unique
+        if index is True:
+            index = 'standard'
+        if isinstance(self.type, List) \
+        or isinstance(self.type, Dict):
+            self.unique_node = True
+        else:
+            self.unique_node = False
+
+        self.index = index
+
+        self.group = group
+        self.primaryKey = primaryKey
+
 
 
     def to_py(self, value):
@@ -148,6 +171,7 @@ class Property(object):
         and value is None:
             return False, [u'Property is not nullable.']
         return self.type.validate(value)
+
 
 
     def __repr__(self):
@@ -287,42 +311,101 @@ class MigrationGenerator(object):
         self.logger = logger
         self._queries = []
 
+        self.properties = {}
+        self.labels = {}
+        self.groups = {}
+
+
     def run(self):
-        for node in self.metadata_map._nodes:
+        for node in self.metadata_map._nodes.values():
             self.run_node(node)
-        for relationship in self.metadata_map._relationships:
+        for relationship in self.metadata_map._relationships.values():
             self.run_relationship(relationship)
+        # Run groups
+        # @todo
         return self
 
     def run_node(self, node):
-        for prop in node.properties:
-            self.run_property_node(node, prop)
+        for prop in node.properties.values():
+            self.make_property_key(node, prop)
         return self
 
 
     def run_relationship(self, relationship):
-        for prop in relationship.properties:
-            self.run_property_relationship(relationship, prop)
+        for prop in relationship.properties.values():
+            self.make_property_key(relationship, prop)
+        self.make_edge_label(relationship)
         return self
 
     def run_property_relationship(self, relationship, property):
         # g.makeType().name("battled").primaryKey(time).makeEdgeLabel();
         pass
 
-    def run_property_node(self, node, property):
+    def make_edge_label(self, relationship):
         query = 'graph.makeType()'
-        query += '.name("'+property.name_db+'")'
-        query += '.dataType('+property.type_db+')'
-        query += '.indexed('+'Vertex.class'+')'
-        query += '.unique(Direction.BOTH).makePropertyKey()'
+        query += '.name("'+relationship.model_name+'")'
+        # query += '.indexed('+'Edge.class'+')'
+        # query += '.unique(Direction.BOTH).makePropertyKey()'
+
+        # primarykey
+        for prop in relationship.properties.values():
+            if not prop.primaryKey:
+                continue
+            query += '.primaryKey('+prop.name_db+')'
+            break
+
+        # Signature
+        # @todo
+
+        # Direction
+        if relationship.directed:
+            query += '.directed()'
+        else:
+            query += '.undirected()'
+
+        query += '.makeEdgeLabel()'
         query += ';'
         self._queries.append(query)
 
 
+    def make_property_key(self, model, property):
+        query = 'graph.makeType()'
+
+        # Groups
+        if property.group is not None:
+            query += '.group("'+property.group+'")'
+
+        # Name
+        query += '.name("'+property.name_db+'")'
+
+        # Type
+        query += '.dataType('+property.type.name_db+')'
+
+        # Indexing
+        if property.index is not None:
+            query += '.indexed("' + property.index + '", ' + ('Vertex.class' if model.is_node() else 'Edge.class')+')'
+
+        # Uniqueness
+        if property.unique_graph and not property.unique_node:
+            query += '.unique(Direction.BOTH)'
+        else:
+            if property.unique_graph:
+                query += '.unique(Direction.IN)'
+            if not property.unique_node:
+                query += '.unique(Direction.OUT)'
+
+        # Type
+        query += '.makePropertyKey()'
+        query += ';'
+        self._queries.append(query)
+
+    def make_group(self):
+        # TypeGroup.DEFAULT_GROUP = 1
+        query = 'TypeGroup family = TypeGroup.of(2,"family");'
 
 
-
-
+    def __str__(self):
+        return "\n".join(self._queries)
 
 
 
