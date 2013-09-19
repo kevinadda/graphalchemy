@@ -83,10 +83,10 @@ websiteHostsPage_in = Adjacency(page, websiteHostsPageZ,
 
 
 mapper(WebsiteHostsPage, websiteHostsPageZ)
-mapper(Page, page, properties={
+mapper(Page, page, adjacencies={
     'isHostedBy': websiteHostsPage_in
 })
-mapper(Website, website, properties={
+mapper(Website, website, adjacencies={
     'hosts': websiteHostsPage_out
 })
 

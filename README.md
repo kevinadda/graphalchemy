@@ -13,7 +13,7 @@ at your own risk. Contributions welcome.
 
 # Documentation
 
-Available at https://github.com/chefjerome/graphalchemy/doc
+Available at https://github.com/chefjerome/graphalchemy/tree/staging/doc
 
 
 # Author

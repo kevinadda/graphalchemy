@@ -46,13 +46,12 @@ class Mapper(object):
     def __call__(self,
                  class_,
                  model=None,
-                 properties=None
+                 adjacencies=None
                  ):
 
         # Instrument class attributes
         # Instrument class adjacencies
-        
+
         # Update the metadata to register the class
         model.register_class(class_)
-        
-        
+

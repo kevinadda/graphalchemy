@@ -92,7 +92,7 @@ Eventually, you need to bind each of these declarations to existing objects. It'
     # still in mapping.py
 
     mapper(WebsiteHasPage, websiteHasPage)
-    mapper(Website, website, properties={
+    mapper(Website, website, adjacencies={
         'pages': Adjacency(
             website,
             websiteHasPage,
@@ -101,7 +101,7 @@ Eventually, you need to bind each of these declarations to existing objects. It'
             direction=Relationship.OUT
         )
     })
-    mapper(Page, page, properties={
+    mapper(Page, page, adjacencies={
         'website': Adjacency(
             page,
             websiteHasPage,

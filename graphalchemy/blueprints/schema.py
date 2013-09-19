@@ -14,7 +14,7 @@ from graphalchemy.blueprints.types import Dict
 
 class Model(object):
     """ Holds all the schema characteristics that we want to enforce on an
-    Element.
+    Element (a Vertex or an Edge).
 
     This is an abstract class that is extended by specializations for Nodes
     and Relationships.
@@ -33,22 +33,40 @@ class Model(object):
 
 
     def register_class(self, class_):
+        """ Binds this model to a Python class in the current metadata map, in
+        order to be able to perform mapping operations.
+
+        :param class_: The python class to tie to this model.
+        :type class_: object
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Model
+        """
         raise NotImplementedError()
 
 
     def is_node(self):
+        """ :returns: True if this model is applicable to a node.
+        :rtype: bool
+        """
         raise NotImplementedError()
 
 
     def is_relationship(self):
+        """ :returns: True if this model is applicable to a relationship.
+        :rtype: bool
+        """
         raise NotImplementedError()
 
 
-    def __repr__(self):
-        return self.model_name
-
-
     def add_property(self, prop):
+        """ Registers a property on the current model, and register its index
+        if it exists.
+
+        :param prop: The property to register.
+        :type prop: graphalchemy.blueprints.schema.Property
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Model
+        """
         if prop.name_py in self.properties:
             raise Exception('Cannot override previously set property.')
         self.properties[prop.name_py] = prop
@@ -60,35 +78,91 @@ class Model(object):
         return self
 
 
+    def __repr__(self):
+        """ :returns: a readable representation of this model.
+        :rtype: str
+        """
+        return self.model_name
+
+
     def _useful_indices_among(self, amongs):
         return [among for among in amongs if (among in self.indices)]
 
 
 
 class Node(Model):
+    """ Defines a model over a vertex, by specifying its properties.
+
+    Example use :
+    >>> website = Node('Website', metadata,
+    ...     Property('name', String(127), nullable=False, indexed='search'),
+    ...     Property('domain', Url(2801))
+    ... )
+    """
 
     # The key under which the Model name will be saved
     model_name_storage_key = 'element_type'
     model_type = 'vertex'
 
     def __init__(self, model_name, metadata, *args, **kwargs):
+        """ Creates a vertex model. It will enforce a domain model on every
+        vertex that has the corresponding model_name. It is similar to a table
+        for a relational database.
+        By itself, it does not contain any relationship. Relationships are
+        declared as adjacencies in the mapper step, because adjacencies are
+        constraints enforced between different objects (a node and a relation).
+
+        :param model_name: The name of the model in the database. Will be saved
+        as a property with key model_name_storage_key.
+        :type model_name: str
+        :param metadata: The metadata object that will hold the metadata.
+        :type metadata: graphalchemy.blueprints.schema.Metadata
+        :param properties: The list of properties that this model supports. Only
+        them will be persisted in the graph.
+        :type properties: list<graphalchemy.blueprints.model.Property>
+        """
         super(Node, self).__init__(model_name, metadata, *args, **kwargs)
         for prop in args:
             if prop.primaryKey == True:
                 raise Exception('Only edge properties can be primaryKeys.')
             self.add_property(prop)
 
+
     def register_class(self, class_):
+        """ Binds this model to a Python class in the current metadata map, in
+        order to be able to perform mapping operations.
+
+        :param class_: The python class to tie to this model.
+        :type class_: object
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Node
+        """
         self.metadata.bind_node(class_, self)
+        return self
+
 
     def is_node(self):
+        """ :returns: True if this model is applicable to a node.
+        :rtype: bool
+        """
         return True
 
+
     def is_relationship(self):
+        """ :returns: True if this model is applicable to a relationship.
+        :rtype: bool
+        """
         return False
 
 
 class Relationship(Model):
+    """ Defines a model over an edge, by specifying its properties.
+
+    Example use :
+    >>> websiteHasPage = Relationship('WebsiteHasPage', metadata,
+    ...     Property('created', DateTime(), nullable=False)
+    ... )
+    """
 
     # The key under which the Model name will be saved
     model_name_storage_key = 'label'
@@ -99,6 +173,22 @@ class Relationship(Model):
     BOTH = 'both'
 
     def __init__(self, model_name, metadata, *args, **kwargs):
+        """ Creates an edge model. It will enforce a domain model on every
+        edge that has the corresponding model_name. It is similar to a join
+        table for a relational database.
+        By itself, it does not contain any relationship. Relationships are
+        declared as adjacencies in the mapper step, because adjacencies are
+        constraints enforced between different objects (a node and a relation).
+
+        :param model_name: The name of the model in the database. Will be saved
+        as a property with key model_name_storage_key.
+        :type model_name: str
+        :param metadata: The metadata object that will hold the metadata.
+        :type metadata: graphalchemy.blueprints.schema.Metadata
+        :param properties: The list of properties that this model supports. Only
+        them will be persisted in the graph.
+        :type properties: list<graphalchemy.blueprints.model.Property>
+        """
         super(Relationship, self).__init__(model_name, metadata, *args, **kwargs)
         self.directed = kwargs.get('directed', True)
         self.signature = kwargs.get('signature', True)
@@ -106,12 +196,26 @@ class Relationship(Model):
             self.add_property(prop)
 
     def register_class(self, class_):
+        """ Binds this model to a Python class in the current metadata map, in
+        order to be able to perform mapping operations.
+
+        :param class_: The python class to tie to this model.
+        :type class_: object
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Model
+        """
         self.metadata.bind_relationship(class_, self)
 
     def is_node(self):
+        """ :returns: True if this model is applicable to a node.
+        :rtype: bool
+        """
         return False
 
     def is_relationship(self):
+        """ :returns: True if this model is applicable to a relationship.
+        :rtype: bool
+        """
         return True
 
 

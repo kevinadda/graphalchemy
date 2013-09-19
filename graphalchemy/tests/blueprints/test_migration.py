@@ -70,7 +70,7 @@ class TestMigrationGenerator(TestCase):
 
 
         self.mapper(WebsiteHostsPage, websiteHostsPage)
-        self.mapper(Website, website, properties={
+        self.mapper(Website, website, adjacencies={
             'hosts': websiteHostsPage_out
         })
 
