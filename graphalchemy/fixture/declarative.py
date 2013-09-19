@@ -70,12 +70,12 @@ websiteHostsPageZ = Relationship('hosts', metadata,
     Property('accessible', Boolean())
 )
 
-websiteHostsPage_out = Adjacency(website, websiteHostsPageZ,
+websiteHostsPage_out = Adjacency(website,
     direction=Relationship.OUT,
     unique=False,
     nullable=True
 )
-websiteHostsPage_in = Adjacency(page, websiteHostsPageZ,
+websiteHostsPage_in = Adjacency(page,
     direction=Relationship.IN,
     unique=True,
     nullable=False

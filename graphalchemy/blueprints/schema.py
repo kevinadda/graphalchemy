@@ -8,6 +8,7 @@
 from graphalchemy.blueprints.types import List
 from graphalchemy.blueprints.types import Dict
 
+
 # ==============================================================================
 #                                      MODEL
 # ==============================================================================
@@ -27,7 +28,8 @@ class Model(object):
     def __init__(self, model_name, metadata, *args, **kwargs):
         self.model_name = model_name
         self.metadata = metadata
-        self.properties = {}
+        self._properties = {}
+        self._adjacencies = {}
         self.indices = {}
         self.logger = kwargs.get('logger', None)
 
@@ -67,15 +69,19 @@ class Model(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.Model
         """
-        if prop.name_py in self.properties:
+        if prop.name_py in self._properties:
             raise Exception('Cannot override previously set property.')
-        self.properties[prop.name_py] = prop
+        self._properties[prop.name_py] = prop
         if prop.index:
             self.indices[prop.name_py] = prop
         if prop.prefix == True:
             prop.name_db = self.model_name + '_' + prop.name_db
         prop.model = self
         return self
+
+
+    def add_adjacency(self, adjacency, name):
+        raise NotImplementedError()
 
 
     def __repr__(self):
@@ -155,6 +161,26 @@ class Node(Model):
         return False
 
 
+    def add_adjacency(self, adjacency, name):
+        """ Registers an adjacency in the current model.
+
+        :param adjacency: The adjacency to register.
+        :type adjacency: str
+        :param name: The name of the property to connect the node to.
+        :type name: str
+        """
+
+        # Save in related models
+        self._adjacencies[name] = adjacency
+        if adjacency.node is None:
+            adjacency.node = self
+
+        # Register property
+        # @todo
+
+        return self
+
+
 class Relationship(Model):
     """ Defines a model over an edge, by specifying its properties.
 
@@ -206,6 +232,27 @@ class Relationship(Model):
         """
         self.metadata.bind_relationship(class_, self)
 
+
+    def add_adjacency(self, adjacency, name):
+        """ Registers an adjacency in the current model.
+
+        :param adjacency: The adjacency to register.
+        :type adjacency: str
+        :param name: The name of the property to connect the relationship to.
+        :type name: str
+        """
+
+        # Save in related models
+        self._adjacencies[name] = adjacency
+        if adjacency.relationship is None:
+            adjacency.relationship = self
+
+        # Register property
+        # @todo
+
+        return self
+
+
     def is_node(self):
         """ :returns: True if this model is applicable to a node.
         :rtype: bool
@@ -225,25 +272,25 @@ class Relationship(Model):
 # ==============================================================================
 
 class Adjacency(object):
-    """ An adjacency defines a constraint that we impose between a relation and a
-    node. It imposes :
+    """ An adjacency defines a constraint that we impose between a relation and
+    a node. It imposes :
     - at the database level, unique-IN and unique-OUT constraints
     - at the application level, specifications on the type of node that a given
     relationship connects.
     """
 
-    def __init__(self, node, relationship, nullable=None, unique=False, direction=None):
+    def __init__(self, relationship, nullable=None, unique=True, direction=None, node=None):
         """ Defines the constraints to apply on an adjacency.
 
         :param node: The node model that is connected.
         :type node: graphalchemy.blueprints.schema.Node
         :param relationship: The relationship model that connects.
         :type relationship: graphalchemy.blueprints.schema.Relationship
-        :param unique: Whether the given node can be connected to multiple instances
-        of the relationship.
+        :param unique: Whether the given node can be connected to multiple
+        instances of the relationship.
         :type unique: bool
-        :param nullable: Whether the given node can be connected to no instance of the
-        relationship.
+        :param nullable: Whether the given node can be connected to no instance
+        of the relationship.
         :type nullable: bool
         :param direction: Whether the relation is IN-bound, or OUT-bound.
         :type direction: const
@@ -370,8 +417,7 @@ class Property(object):
 
 
     def __repr__(self):
-        """ Prints a readable representation of the property.
-
+        """ :returns: A readable representation of the property.
         :rtype: str
         """
         return '<'+str(self.model)+'.'+self.name_py+'('+str(self.type)+')>'
