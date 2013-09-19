@@ -121,8 +121,12 @@ class Relationship(Model):
 # ==============================================================================
 
 class Adjacency(object):
+    """ An adjacency defines a constraint that we impose between a relation and a
+    node. It imposes :
+    -
+    """
 
-    def __init__(self, node, relationship, direction=None, unique=False, nullable=None):
+    def __init__(self, node, relationship, nullable=None, unique=False, direction=None):
         self.node = node
         self.relationship = relationship
         self.direction = direction
@@ -133,7 +137,7 @@ class Adjacency(object):
 
 class Property(object):
 
-    def __init__(self, name_py, type_, nullable=None, index=None, primaryKey=False, group=None, unique=False, prefix=False, name_db=None):
+    def __init__(self, name_py, type_, nullable=None, unique=False, index=None, primaryKey=False, group=None, prefix=False, name_db=None):
 
         self.model = None
 
