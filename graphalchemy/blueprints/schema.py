@@ -123,10 +123,27 @@ class Relationship(Model):
 class Adjacency(object):
     """ An adjacency defines a constraint that we impose between a relation and a
     node. It imposes :
-    -
+    - at the database level, unique-IN and unique-OUT constraints
+    - at the application level, specifications on the type of node that a given
+    relationship connects.
     """
 
     def __init__(self, node, relationship, nullable=None, unique=False, direction=None):
+        """ Defines the constraints to apply on an adjacency.
+
+        :param node: The node model that is connected.
+        :type node: graphalchemy.blueprints.schema.Node
+        :param relationship: The relationship model that connects.
+        :type relationship: graphalchemy.blueprints.schema.Relationship
+        :param unique: Whether the given node can be connected to multiple instances
+        of the relationship.
+        :type unique: bool
+        :param nullable: Whether the given node can be connected to no instance of the
+        relationship.
+        :type nullable: bool
+        :param direction: Whether the relation is IN-bound, or OUT-bound.
+        :type direction: const
+        """
         self.node = node
         self.relationship = relationship
         self.direction = direction
@@ -136,8 +153,52 @@ class Adjacency(object):
 
 
 class Property(object):
+    """ A property specifies how a property is constrained, and how it is mapped
+    to the database. A property can apply to a node as well as a relationship.
+
+    It imposes :
+    - a validation on the application side (notably type validation and nullable
+    verification)
+    - a conversion to the appropriate datatype for database persistence
+
+    It enables :
+    - a flexible property mapping (prefixing, property name conversion)
+    - indexing on a per-property and per-model basis
+    - primaryKey definition for edges
+    """
 
     def __init__(self, name_py, type_, nullable=None, unique=False, index=None, primaryKey=False, group=None, prefix=False, name_db=None):
+        """ Defines the constraints to apply on a property.
+
+        :param name_py: The name of the property in the Python objects
+        :type name_py: str
+        :param type_: The python type, that will be automatically converted to
+        a corresponding datatype in the database.
+        :type type_: graphalchemy.blueprints.types.Type
+        :param nullable: Whether the property can be None.
+        :type nullable: bool
+        :param unique: Whether the property value is unique in the entire graph.
+        This is enforced as a unique-IN constraint in the graph type definition.
+        :type unique: bool
+        :param index: Which index to use to index the property. If True is
+        provided, the default index will be used. Not that this is enforced at
+        the database-level, not at the model level, so if this property is used
+        in multiple models, it will be indexed on the same index. The Migration
+        tool detects such conflicts, and you can use the prefix property to add
+        the model name to the node.
+        :type index: bool
+        :param primaryKey: Whether the property must be used as a primary key
+        to index relations.
+        :type primaryKey: bool
+        :param group: The name of the group to save this relation in.
+        :type group: str
+        :param prefix: Whether this property must be prefixed by the model name.
+        This is typically usefull for indexing purposes, when the property name
+        conflicts with other models.
+        :type prefix: bool
+        :param name_db: The name of the property in the database. Defaults to
+        the name of the property in Python.
+        """
 
         self.model = None
 
@@ -166,14 +227,38 @@ class Property(object):
 
 
     def to_py(self, value):
+        """ Casts a database value to its correct type in Python, after being
+        retrieved from the database for instance.
+
+        :param value: The value to cast.
+        :type value: mixed
+        :returns: The casted value.
+        :type: mixed
+        """
         return self.type.to_py(value)
 
 
     def to_db(self, value):
+        """ Casts a python value to its correct type in the database, before
+        being persisted in the database for instance.
+
+        :param value: The value to cast.
+        :type value: mixed
+        :returns: The casted value.
+        :type: mixed
+        """
         return self.type.to_db(value)
 
 
     def validate(self, value):
+        """ Validates a value given the property specifications. Returns False
+        and a list of errors if it fails.
+
+        :param value: The value to validate.
+        :type value: mixed
+        :returns: A boolean and a list of potential errors.
+        :rtype: bool, list
+        """
         if self.nullable == False \
         and value is None:
             return False, [u'Property is not nullable.']
@@ -181,6 +266,10 @@ class Property(object):
 
 
     def __repr__(self):
+        """ Prints a readable representation of the property.
+
+        :rtype: str
+        """
         return '<'+str(self.model)+'.'+self.name_py+'('+str(self.type)+')>'
 
 
@@ -190,7 +279,7 @@ class Property(object):
 # ==============================================================================
 
 class MetaData(object):
-    """ Holds the metadata of all mapped objects.
+    """ Holds a map of all available metadata of all mapped models.
     """
 
     def __init__(self, bind=None, schema=None):
@@ -311,8 +400,17 @@ class Validator(object):
 
 
 class MigrationGenerator(object):
+    """ Generates the groovy schema declaration from the current metadata.
+    """
 
     def __init__(self, metadata_map, logger=None):
+        """ Initializes the migration generator from :
+
+        :param metadata_map: The metadata holder.
+        :type metadata_map: graphalchemy.blueprints.schema.MetaData
+        :param logger: An optionnal logger.
+        :type logger: logging.Logger
+        """
         self.metadata_map = metadata_map
         self.logger = logger
 
@@ -323,46 +421,66 @@ class MigrationGenerator(object):
 
 
     def run(self):
+        """ Generates all queries.
+
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
         for node in self.metadata_map._nodes.values():
             self.run_node(node)
         for relationship in self.metadata_map._relationships.values():
             self.run_relationship(relationship)
-        # Run groups
         for i, name in enumerate(self._groups.keys()):
             self.make_group(name, i + 2) # Indexing starts at 2
         return self
 
 
     def run_node(self, node):
+        """ Generates all queries for a given node model.
+
+        :param node: The node to generate the label from.
+        :type node: graphalchemy.blueprints.schema.Node
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
         for prop in node.properties.values():
             self.make_property_key(node, prop)
         return self
 
 
     def run_relationship(self, relationship):
+        """ Generates all queries for a given relationship model.
+
+        :param relationship: The relationship to generate the label from.
+        :type relationship: graphalchemy.blueprints.schema.Relationship
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
         for prop in relationship.properties.values():
             self.make_property_key(relationship, prop)
         self.make_edge_label(relationship)
         return self
 
 
-    def run_property_relationship(self, relationship, property):
-        # g.makeType().name("battled").primaryKey(time).makeEdgeLabel();
-        pass
-
-
     def make_edge_label(self, relationship):
+        """ Creates the query for an edge label.
+
+        :param relationship: The relationship to generate the label from.
+        :type relationship: graphalchemy.blueprints.schema.Relationship
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
         query = 'graph.makeType()'
         query += '.name("'+relationship.model_name+'")'
         # query += '.indexed('+'Edge.class'+')'
         # query += '.unique(Direction.BOTH).makePropertyKey()'
 
-        # primarykey
-        for prop in relationship.properties.values():
-            if not prop.primaryKey:
-                continue
-            query += '.primaryKey('+prop.name_db+')'
-            break
+        # primaryKey
+        pks = [for prop in relationship.properties.values() if prop.primaryKey]
+        if len(pks) > 1:
+            raise Exception('More than one private key was defined.')
+        if len(pks) == 1
+            query += '.primaryKey('+pks[0].name_db+')'
 
         # Signature
         # @todo
@@ -380,12 +498,21 @@ class MigrationGenerator(object):
 
 
     def make_property_key(self, model, property):
+        """ Creates the query for a property key.
+
+        :param model: The model to generate the property from.
+        :type model: graphalchemy.blueprints.schema.Model
+        :param property: The property to create.
+        :type property: graphalchemy.blueprints.schema.Property
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
         query = 'graph.makeType()'
 
         # Groups
         if property.group is not None:
             query += '.group("'+property.group+'")'
-            self._groups[property.group] = None
+            self._push_group(property.group, None)
 
         # Name
         query += '.name("'+property.name_db+'")'
@@ -413,27 +540,74 @@ class MigrationGenerator(object):
         return self
 
 
-    def _push_property(self, name_db, query):
-        if name_db in self._properties:
-            raise Exception('This property is already used : '+str(name_db))
-        self._properties[name_db] = query
-        self._queries.append(query)
-
-
-    def _push_label(self, name_db, query):
-        if name_db in self._labels:
-            raise Exception('This label is already used : '+str(name_db))
-        self._labels[name_db] = query
-        self._queries.append(query)
-
-
-
     def make_group(self, name, id):
+        """ Creates the query for a group.
+
+        :param name_db: The name of the property in the database.
+        :type name_db: str
+        :param query: The corresponding query.
+        :type query: str
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
         query = 'TypeGroup ' + name + ' = TypeGroup.of(' + str(id) + ',"' + name + '");'
         self._queries.append(query)
         return self
 
 
+    def _push_property(self, name_db, query):
+        """ Adds a property to the creation list. This is usefull to detect and
+        resolve conflicts at model definition runtime.
+
+        :param name_db: The name of the property in the database.
+        :type name_db: str
+        :param query: The corresponding query.
+        :type query: str
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
+        if name_db in self._properties:
+            raise Exception('This property is already used : '+str(name_db))
+        self._properties[name_db] = query
+        self._queries.append(query)
+        return self
+
+
+    def _push_label(self, name_db, query):
+        """ Adds a label to the creation list. This is usefull to detect and
+        resolve conflicts at model definition runtime.
+
+        :param name_db: The name of the label in the database.
+        :type name_db: str
+        :param query: The corresponding query.
+        :type query: str
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
+        if name_db in self._labels:
+            raise Exception('This label is already used : '+str(name_db))
+        self._labels[name_db] = query
+        self._queries.append(query)
+        return self
+
+
+    def _push_group(self, name_db, query):
+        """ Adds a group to the creation list. This is usefull to detect and
+        resolve conflicts at model definition runtime.
+
+        :param name_db: The name of the property in the database.
+        :type name_db: str
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.MigrationGenerator
+        """
+        self._groups[name_db] = query
+        return self
+
+
     def __str__(self):
+        """ Returns a readable version of the required queries.
+
+        :rtype: str
+        """
         return "\n".join(self._queries)
 
