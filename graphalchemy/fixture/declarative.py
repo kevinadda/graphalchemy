@@ -70,12 +70,12 @@ websiteHostsPageZ = Relationship('hosts', metadata,
     Property('accessible', Boolean())
 )
 
-websiteHostsPage_out = Adjacency(website, websiteHostsPageZ,
+websiteHostsPage_out = Adjacency(website,
     direction=Relationship.OUT,
     unique=False,
     nullable=True
 )
-websiteHostsPage_in = Adjacency(page, websiteHostsPageZ,
+websiteHostsPage_in = Adjacency(page,
     direction=Relationship.IN,
     unique=True,
     nullable=False
@@ -83,10 +83,10 @@ websiteHostsPage_in = Adjacency(page, websiteHostsPageZ,
 
 
 mapper(WebsiteHostsPage, websiteHostsPageZ)
-mapper(Page, page, properties={
+mapper(Page, page, adjacencies={
     'isHostedBy': websiteHostsPage_in
 })
-mapper(Website, website, properties={
+mapper(Website, website, adjacencies={
     'hosts': websiteHostsPage_out
 })
 

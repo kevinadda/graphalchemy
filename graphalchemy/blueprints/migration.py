@@ -5,6 +5,8 @@
 #                                      IMPORTS
 # ==============================================================================
 
+from graphalchemy.blueprints.schema import Relationship
+
 
 # ==============================================================================
 #                                      SERVICE
@@ -12,6 +14,10 @@
 
 class MigrationGenerator(object):
     """ Generates the groovy schema declaration from the current metadata.
+
+    Example use :
+    >>> migration_generator = MigrationGenerator(metadata)
+    >>> migration_generator.run()
     """
 
     def __init__(self, metadata_map, logger=None):
@@ -38,9 +44,12 @@ class MigrationGenerator(object):
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
         for node in self.metadata_map._nodes.values():
+            self._queries.append('// Node '+node.model_name)
             self.run_node(node)
         for relationship in self.metadata_map._relationships.values():
+            self._queries.append('// Relationship '+relationship.model_name)
             self.run_relationship(relationship)
+        self._queries.append('// Groups')
         for i, name in enumerate(self._groups.keys()):
             self.make_group(name, i + 2) # Indexing starts at 2
         return self
@@ -54,7 +63,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        for prop in node.properties.values():
+        for prop in node._properties.values():
             self.make_property_key(node, prop)
         return self
 
@@ -67,7 +76,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        for prop in relationship.properties.values():
+        for prop in relationship._properties.values():
             self.make_property_key(relationship, prop)
         self.make_edge_label(relationship)
         return self
@@ -87,7 +96,7 @@ class MigrationGenerator(object):
         # query += '.unique(Direction.BOTH).makePropertyKey()'
 
         # primaryKey
-        pks = [prop for prop in relationship.properties.values() if prop.primaryKey]
+        pks = [prop for prop in relationship._properties.values() if prop.primaryKey]
         if len(pks) > 1:
             raise Exception('More than one private key was defined.')
         if len(pks) == 1:
@@ -102,6 +111,33 @@ class MigrationGenerator(object):
         else:
             query += '.undirected()'
 
+        # Uniqueness
+        uniques_in = [
+            adjacency
+            for adjacency in relationship._adjacencies.values()
+            if adjacency.unique == True and adjacency.direction == Relationship.IN
+        ]
+        all_in = [
+            adjacency
+            for adjacency in relationship._adjacencies.values()
+            if adjacency.direction == Relationship.IN
+        ]
+        if len(uniques_in) == len(all_in):
+            query += '.unique(IN)'
+        uniques_out = [
+            adjacency
+            for adjacency in relationship._adjacencies.values()
+            if adjacency.unique == True and adjacency.direction == Relationship.OUT
+        ]
+        all_out = [
+            adjacency
+            for adjacency in relationship._adjacencies.values()
+            if adjacency.direction == Relationship.OUT
+        ]
+        if len(uniques_out) == len(all_out):
+            query += '.unique(OUT)'
+
+        # Type
         query += '.makeEdgeLabel()'
         query += ';'
         self._push_label(relationship.model_name, query)
@@ -161,7 +197,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        query = 'TypeGroup ' + name + ' = TypeGroup.of(' + str(id) + ',"' + name + '");'
+        query = 'TypeGroup ' + name + ' = TypeGroup.of(' + str(id) + ', "' + name + '");'
         self._queries.append(query)
         return self
 

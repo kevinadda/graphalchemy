@@ -42,7 +42,7 @@ class Validator(object):
         metadata = self.metadata_map.for_object(obj)
         all_errors = {}
         ok = True
-        for property in metadata.properties.values():
+        for property in metadata._properties.values():
             python_value = getattr(obj, property.name_py)
             _ok, errors = property.validate(python_value)
             if _ok:
