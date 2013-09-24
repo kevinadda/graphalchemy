@@ -17,7 +17,7 @@ class VisualizationGenerator(object):
 
     """ Parse a graphalchemy metadata object and generate a code formatted text
         toward model visualization.
-        
+
         This abstract class does not implement output formatting methods.
         This class should be extended with implementation of formatting methods
         to be adapted to different visualization-wise programming languages.
@@ -31,7 +31,7 @@ class VisualizationGenerator(object):
             :type metadata_map: graphalchemy.blueprints.schema.MetaData
             :param logger: An optionnal logger.
             :type logger: logging.Logger
-            :param output_path: The path where the output should be written. 
+            :param output_path: The path where the output should be written.
             :type output_path: str
         """
         self.metadata_map = metadata_map
@@ -43,6 +43,7 @@ class VisualizationGenerator(object):
         self._labels = {}
         self._groups = {}
         self.output_path = output_path
+        self.graph_title = "graphalchemy - Data model diagram."
 
 # -----------------------------------------------------------------------------
 # Metadata parsing method
@@ -107,7 +108,7 @@ class VisualizationGenerator(object):
 # -----------------------------------------------------------------------------
 
     def write_output(self):
-        """ Write formatted output in a file. 
+        """ Write formatted output in a file.
         """
         with open(self.output_path, 'w') as f:
             f.write(self._output)
@@ -129,6 +130,14 @@ class VisualizationGenerator(object):
         """
         self.output_path = path
         return self
+
+    def set_graph_title(self, title):
+        """ Set graph title.
+
+            :param title: the title of the outputted graph.
+            :type title: str
+        """
+        self.graph_title = title
 
 # -----------------------------------------------------------------------------
 # Visualization language dependent methods
@@ -177,7 +186,7 @@ class VisualizationGenerator(object):
         """
         raise NotImplementedError(("Output formatting method are not "
                                    "implemented in %s") % str(self.__class__))
-    
+
     def generate_output(self):
         """ Generate output from _nodes and _relationships attributes
             into self.output.
@@ -196,11 +205,11 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
         """ Creates a Graphiz visualization generator.
 
             Example of use:
-            
+
             python:
             > visualizer = GraphvizVisualizationGenerator(myMetadata)
             > visualizer.set_output_path('/tmp/viz.dot').run().write_output()
-            
+
             shell:
             $ dot -Tjpg /tmp/viz.dot -o /tmp/viz.jpeg
             $ eog /tmp/viz.jpg
@@ -209,7 +218,7 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             :type metadata_map: graphalchemy.blueprints.schema.MetaData
             :param logger: An optionnal logger.
             :type logger: logging.Logger
-            :param output_path: The path where the output should be written. 
+            :param output_path: The path where the output should be written.
             :type output_path: str
         """
         super(GraphvizVisualizationGenerator, self).__init__(metadata_map,
@@ -221,7 +230,6 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
         # Load template
         from dot_template import _template
         self._template = _template
-
 
 # -----------------------------------------------------------------------------
 # Visualization language dependent methods
@@ -276,19 +284,20 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
                                                     in self._relationships])
 
         self._output = self._template \
-            % {'NODES': node_instantiations,
+            % {'TITLE': self.graph_title,
+               'NODES': node_instantiations,
                'RELATIONSHIPS': relationships_instantiations}
         return
 
 # -----------------------------------------------------------------------------
 # Color generation
 # -----------------------------------------------------------------------------
-    
+
     def load_colors(self):
         """ Loads colors from color_settings configuration file.
             color_settings is by default a list of colors.
             color_settings can be a dictionary mapping node names to colors.
-            
+
             :param color_settings: A list of colors, or a dictionary mapping
                                    node names (key) to colors (value).
             :type color_settings: list<color:str>
@@ -304,15 +313,22 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
                             % (__name__, str(type(colors))))
 
     def _set_color(self, node_name=None):
+        """ Generate node color from color_settings.
+
+            :param node_name: the name of the node.
+            :type node_name: str
+            :returns: a Graphviz color.
+            :rtype: str
+        """
         if isinstance(self.color_generator, Iterable):
             return self.color_generator.next()
         else:
             return self.color_generator[node_color_key]
 
+
 # =============================================================================
 #                                 TEST
 # =============================================================================
-
 
 def main():
     from jerome.model.ogm.abstract import metadata
@@ -320,7 +336,7 @@ def main():
     vizgenerator = GraphvizVisualizationGenerator(metadata)
     vizgenerator.set_output_path('/tmp/model_visualization.dot') \
         .run().write_output()
-    
+
     from subprocess import call
     call(["dot", "-Tjpg", "/tmp/model_visualization.dot",
           "-o", "/tmp/model_visualization.jpg"])
