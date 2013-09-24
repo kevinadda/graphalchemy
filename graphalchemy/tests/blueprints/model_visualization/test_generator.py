@@ -31,6 +31,7 @@ from graphalchemy.blueprints.types import DateTime
 # Auxiliary
 from graphalchemy.ogm.mapper import Mapper
 
+import re
 
 # ==============================================================================
 #                                     TESTING
@@ -89,14 +90,17 @@ class TestGraphvizVisualizationGenerator(TestCase):
                           self.title_test_value)
 
     def test_nodes(self):
-        self.assertEquals(self.visualization_generator._nodes,
-                          ['node_Website [ label =  "[Website] \\n\\n\\ - domain\\n\\\n- name\\n\\\n- tags",\n color = "palegreen4"  ];',
-                           'node_Page [ label =  "[Page] \\n\\n\\ - url\\n\\\n- title",\n color = "paleturquoise4"  ];']
-                          )
+        # assertIn
+        node_test_values = ['node_Page [ label =  "[Page] \\n\\n\\ - url\\n\\\n- title",\n $$  ];',
+                            'node_Website [ label =  "[Website] \\n\\n\\ - domain\\n\\\n- name\\n\\\n- tags",\n $$  ];']
+        for node in self.visualization_generator._nodes.values():
+            node = re.sub('color = ".*"', "$$", node)
+            self.assertIn(node, node_test_values)
 
     def test_relationships(self):
-        self.assertEquals(self.visualization_generator._relationships,
+        self.assertEquals(self.visualization_generator._relationships.values(),
                           ['"node_Website" -> "node_Page" [ label = "hosts \\n\\ - accessible\\n\\\n- since " taillabel="N\t" headlabel="\t1" ];']
                           )
+
 
 

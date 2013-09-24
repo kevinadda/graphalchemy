@@ -7,7 +7,7 @@
 
 import itertools
 from collections import Iterable
-
+from os import path
 
 # =============================================================================
 #                    VISUALIZATION GENERATOR ABSTRACT CLASS
@@ -27,23 +27,24 @@ class VisualizationGenerator(object):
                  output_path=None):
         """ Creates a visualization generator.
 
-            :param metadata_map: Implemented model metadata.
-            :type metadata_map: graphalchemy.blueprints.schema.MetaData
-            :param logger: An optionnal logger.
-            :type logger: logging.Logger
-            :param output_path: The path where the output should be written.
-            :type output_path: str
+        :param metadata_map: Implemented model metadata.
+        :type metadata_map: graphalchemy.blueprints.schema.MetaData
+        :param logger: An optionnal logger.
+        :type logger: logging.Logger
+        :param output_path: The path where the output should be written.
+        :type output_path: str
         """
         self.metadata_map = metadata_map
         self.logger = logger
 
-        self._nodes = []
-        self._relationships = []
+        self._nodes = {}
+        self._relationships = {}
         self._properties = {}
         self._labels = {}
         self._groups = {}
         self.output_path = output_path
         self.graph_title = "graphalchemy - Data model diagram."
+        self.filename = "data_model_diagram"
 
 # -----------------------------------------------------------------------------
 # Metadata parsing method
@@ -60,7 +61,7 @@ class VisualizationGenerator(object):
             self.run_relationship(relationship)
 
         # Generate output in a
-        self.generate_output()
+        self._output = self.generate_output()
         return self
 
     def run_node(self, node):
@@ -72,7 +73,7 @@ class VisualizationGenerator(object):
         name = str(node)
         properties = [prop.name_py for prop in node._properties.values()]
         node_dot_instance = self._generate_node_instance(name, properties)
-        self._nodes.append(node_dot_instance)
+        self._nodes[node] = node_dot_instance
         return
 
     def run_relationship(self, relationship):
@@ -100,7 +101,8 @@ class VisualizationGenerator(object):
             # Create relationship between those nodes
             relationship_dot_instance = self \
                 ._generate_relationship_instance(_binding, properties)
-            self._relationships.append(relationship_dot_instance)
+            self._relationships[(_binding['in'].node,
+                                 _binding['out'].node)] = relationship_dot_instance
         return
 
 # -----------------------------------------------------------------------------
@@ -108,25 +110,36 @@ class VisualizationGenerator(object):
 # -----------------------------------------------------------------------------
 
     def write_output(self):
-        """ Write formatted output in a file.
+        """ Write formatted output in a file or multiple file for multiple graphs.
         """
-        with open(self.output_path, 'w') as f:
-            f.write(self._output)
+        if isinstance(self._output, str):
+            full_path = path.join(self.output_path, self.filename + '.dot')
+            with open(full_path, 'w') as f:
+                f.write(self._output)
+        elif isinstance(self._output, dict):
+            for node_name, graph in self._output.iteritems():
+                filename = self.filename + '_node_' + node_name + '.dot'
+                full_path = path.join(self.output_path,
+                                      filename)
+                with open(full_path, 'w') as f:
+                    f.write(graph)
+        else:
+            raise NotImplementedError()
         return
 
     def get_output(self):
         """ Returns output as a string.
 
-            :returns: formatted output.
-            :rtype: str
+        :returns: formatted output.
+        :rtype: str
         """
         return self._output
 
     def set_output_path(self, path):
         """ Set output_path.
 
-            :param output_path: the output file destination.
-            :type output_path: str
+        :param output_path: the output file destination.
+        :type output_path: str
         """
         self.output_path = path
         return self
@@ -134,10 +147,19 @@ class VisualizationGenerator(object):
     def set_graph_title(self, title):
         """ Set graph title.
 
-            :param title: the title of the outputted graph.
-            :type title: str
+        :param title: the title of the outputted graph.
+        :type title: str
         """
         self.graph_title = title
+        return self
+
+    def set_filename(self, filename):
+        """ Set filename for output file.
+
+        :param filename: the filename of the generated code.
+        :type filename: str
+        """
+        self.filename = filename
         return self
 
 # -----------------------------------------------------------------------------
@@ -191,9 +213,21 @@ class VisualizationGenerator(object):
     def generate_output(self):
         """ Generate output from _nodes and _relationships attributes
             into self.output.
+
+        :returns: Formatted output.
+        :rtype: str
         """
         raise NotImplementedError(("Output formatting method are not "
                                    "implemented in %s") % str(self.__class__))
+
+    def generate_node_centric_output(self):
+        """ Generate an output per node from _nodes and _relationships attributes
+            into self.output.
+        """
+        raise NotImplementedError(("Output formatting method are not "
+                                   "implemented in %s") % str(self.__class__))
+
+
 
 
 # =============================================================================
@@ -209,28 +243,29 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 
             python:
             > visualizer = GraphvizVisualizationGenerator(myMetadata)
-            > visualizer.set_output_path('/tmp/viz.dot').run().write_output()
+            > visualizer.set_output_path('/tmp/')
+                .set_filename('db_model').run().write_output()
 
             Then:
 
             shell:
-            $ dot -Tjpg /tmp/viz.dot -o /tmp/viz.jpeg
-            $ eog /tmp/viz.jpg
+            $ dot -Tjpg /tmp/db_model.dot -o /tmp/db_model.jpeg
+            $ eog /tmp/db_model.jpg
 
             or
 
             python:
             > from subprocess import call
-            > call(["dot", "-Tjpg", "/tmp/viz.dot",
-                    "-o", "/tmp/viz.jpg"])
-            > call(["eog", "/tmp/viz.jpg"])
+            > call(["dot", "-Tjpg", "/tmp/db_model.dot",
+                    "-o", "/tmp/db_model.jpg"])
+            > call(["eog", "/tmp/db_model.jpg"])
 
-            :param metadata_map: Implemented model metadata.
-            :type metadata_map: graphalchemy.blueprints.schema.MetaData
-            :param logger: An optionnal logger.
-            :type logger: logging.Logger
-            :param output_path: The path where the output should be written.
-            :type output_path: str
+        :param metadata_map: Implemented model metadata.
+        :type metadata_map: graphalchemy.blueprints.schema.MetaData
+        :param logger: An optionnal logger.
+        :type logger: logging.Logger
+        :param output_path: The path where the output should be written.
+        :type output_path: str
         """
         super(GraphvizVisualizationGenerator, self).__init__(metadata_map,
                                                              logger,
@@ -284,21 +319,87 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
         """
         if len(property_list) <= limit:
             return "\\n\\\n".join(["- %s" % prop for prop in property_list])
-        return self._get_formatted_property_list(property_list[:limit - 1] + ['...'])
+        return self._get_formatted_property_list(property_list[:limit - 1]
+                                                 + ['...'])
 
     def generate_output(self):
         """ Generate dot code formatted output.
         """
-        node_instantiations = "\n\n".join([inst for inst in self._nodes])
-        relationships_instantiations = "\n\n".join([inst
-                                                    for inst
-                                                    in self._relationships])
+        node_instantiations, relationship_instantiations = self \
+            ._generate_instances_from_lists(self._nodes.values(),
+                                            self._relationships.values())
 
-        self._output = self._template \
-            % {'TITLE': self.graph_title,
-               'NODES': node_instantiations,
-               'RELATIONSHIPS': relationships_instantiations}
-        return
+        return self._generate_dot_code(self.graph_title,
+                                       node_instantiations,
+                                       relationship_instantiations)
+
+    def _generate_dot_code(self, node_instances, relationship_instances,
+                           title=None):
+        """ Generate full dot code for a graph from nodes
+            and relation specifications.
+
+        :param node_instances: list of graphviz node instances
+        :type node_instances: list<str>
+        :param relationship_instances: list of graphviz relationship instances
+        :type relationship_instances: list<str>
+        :param title: a specific graph title. Default is self.graph_title
+        :type node_instances: str
+        :returns: Template with node and relationship specifications
+        :rtype: str
+        """
+        if not title:
+            title = self.graph_title
+
+        return self._template \
+            % {'TITLE': title,
+               'NODES': node_instances,
+               'RELATIONSHIPS': relationship_instances}
+
+
+    def _generate_instances_from_lists(self, nodes, relationships):
+        """ Generate graphviz node and relationship instantiations
+            from node and relationship objects lists.
+
+        :param nodes: list of Node objects
+        :type nodes: list<graphalchemy.blueprints.schema.Node>
+        :param relationships: list of Relationship objects
+        :type relationships: list<graphalchemy.blueprints.schema.Relationship>
+        :returns: A tuple containing lists of node and relationship graphviz instances
+        :rtype: tuple<list<str>, list<str>>
+        """
+        node_instantiations = "\n\n".join([inst for inst in nodes])
+        relationship_instantiations = "\n\n".join([inst
+                                                   for inst
+                                                   in relationships])
+        return node_instantiations, relationship_instantiations
+
+    def generate_node_centric_output(self):
+        """ Generate a graph specification per node containing the node and
+            its neighborhood.
+        """
+        outputs = {}
+        # Iterate on nodes
+        for node, node_spec in self._nodes.iteritems():
+            neighbornodes = [node_spec]
+            relationships = []
+            # Iterate on relationships
+            for couple, relationship in self._relationships.iteritems():
+                # Retrieve surrounding relationships
+                if node in couple:
+                    neighbornodes.extend([self._nodes[_node]
+                                          for _node in couple])
+                    relationships.append(relationship)
+
+            neighbornodes = list(set(neighbornodes))
+
+            # Generate instances
+            node_inst, relationship_inst = self \
+                ._generate_instances_from_lists(neighbornodes,
+                                                relationships)
+            outputs[str(node)] = self._generate_dot_code(node_inst,
+                                                         relationship_inst)
+        self._output = outputs
+        return self
 
 # -----------------------------------------------------------------------------
 # Color generation
@@ -309,9 +410,9 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             color_settings is by default a list of colors.
             color_settings can be a dictionary mapping node names to colors.
 
-            :param color_settings: A list of colors, or a dictionary mapping
+        :param color_settings: A list of colors, or a dictionary mapping
                                    node names (key) to colors (value).
-            :type color_settings: list<color:str>
+        :type color_settings: list<color:str>
                                   or dict(node_name<str>: color<str>)
         """
         from configuration.color_settings import colors
@@ -326,10 +427,10 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
     def _set_color(self, node_name=None):
         """ Generate node color from color_settings.
 
-            :param node_name: the name of the node.
-            :type node_name: str
-            :returns: a Graphviz color.
-            :rtype: str
+        :param node_name: the name of the node.
+        :type node_name: str
+        :returns: a Graphviz color.
+        :rtype: str
         """
         if isinstance(self.color_generator, Iterable):
             return self.color_generator.next()
