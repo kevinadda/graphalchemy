@@ -138,6 +138,7 @@ class VisualizationGenerator(object):
             :type title: str
         """
         self.graph_title = title
+        return self
 
 # -----------------------------------------------------------------------------
 # Visualization language dependent methods
@@ -228,7 +229,7 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
         self.load_colors()
 
         # Load template
-        from dot_template import _template
+        from configuration.dot_template import _template
         self._template = _template
 
 # -----------------------------------------------------------------------------
@@ -303,7 +304,7 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             :type color_settings: list<color:str>
                                   or dict(node_name<str>: color<str>)
         """
-        from color_settings import colors
+        from configuration.color_settings import colors
         if isinstance(colors, list):
             self.color_generator = (it for it in colors)
         elif isinstance(colors, dict):
@@ -335,6 +336,7 @@ def main():
 
     vizgenerator = GraphvizVisualizationGenerator(metadata)
     vizgenerator.set_output_path('/tmp/model_visualization.dot') \
+        .set_graph_title('Jerome core data model diagram') \
         .run().write_output()
 
     from subprocess import call
