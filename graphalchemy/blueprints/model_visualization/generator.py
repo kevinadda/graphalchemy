@@ -211,9 +211,19 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             > visualizer = GraphvizVisualizationGenerator(myMetadata)
             > visualizer.set_output_path('/tmp/viz.dot').run().write_output()
 
+            Then:
+
             shell:
             $ dot -Tjpg /tmp/viz.dot -o /tmp/viz.jpeg
             $ eog /tmp/viz.jpg
+
+            or
+
+            python:
+            > from subprocess import call
+            > call(["dot", "-Tjpg", "/tmp/viz.dot",
+                    "-o", "/tmp/viz.jpg"])
+            > call(["eog", "/tmp/viz.jpg"])
 
             :param metadata_map: Implemented model metadata.
             :type metadata_map: graphalchemy.blueprints.schema.MetaData
@@ -325,26 +335,3 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             return self.color_generator.next()
         else:
             return self.color_generator[node_color_key]
-
-
-# =============================================================================
-#                                 TEST
-# =============================================================================
-
-def main():
-    from jerome.model.ogm.abstract import metadata
-
-    vizgenerator = GraphvizVisualizationGenerator(metadata)
-    vizgenerator.set_output_path('/tmp/model_visualization.dot') \
-        .set_graph_title('Jerome core data model diagram') \
-        .run().write_output()
-
-    from subprocess import call
-    call(["dot", "-Tjpg", "/tmp/model_visualization.dot",
-          "-o", "/tmp/model_visualization.jpg"])
-    call(["eog", "/tmp/model_visualization.jpg"])
-    return
-
-
-if __name__ == '__main__':
-    main()
