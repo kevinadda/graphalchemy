@@ -166,6 +166,23 @@ class VisualizationGenerator(object):
 # Visualization language dependent methods
 # -----------------------------------------------------------------------------
 
+    def generate_output(self):
+        """ Generate output from _nodes and _relationships attributes
+            into self.output.
+
+        :returns: Formatted output.
+        :rtype: str
+        """
+        raise NotImplementedError(("Output formatting method are not "
+                                   "implemented in %s") % str(self.__class__))
+
+    def generate_node_centric_output(self):
+        """ Generate an output per node from _nodes and _relationships attributes
+            into self.output.
+        """
+        raise NotImplementedError(("Output formatting method are not "
+                                   "implemented in %s") % str(self.__class__))
+
     def _generate_node_instance(self, name, properties):
         """ Generate output format for node instantiation based on
             its name and properties:
@@ -206,23 +223,6 @@ class VisualizationGenerator(object):
         :type limit: int
         :returns: The formatted limited list of properties.
         :rtype: str
-        """
-        raise NotImplementedError(("Output formatting method are not "
-                                   "implemented in %s") % str(self.__class__))
-
-    def generate_output(self):
-        """ Generate output from _nodes and _relationships attributes
-            into self.output.
-
-        :returns: Formatted output.
-        :rtype: str
-        """
-        raise NotImplementedError(("Output formatting method are not "
-                                   "implemented in %s") % str(self.__class__))
-
-    def generate_node_centric_output(self):
-        """ Generate an output per node from _nodes and _relationships attributes
-            into self.output.
         """
         raise NotImplementedError(("Output formatting method are not "
                                    "implemented in %s") % str(self.__class__))
@@ -281,10 +281,45 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 # Visualization language dependent methods
 # -----------------------------------------------------------------------------
 
-    def _generate_node_instance(self, name, properties):
-        """ Generate dot code node instantiation based on its
-            name and properties:
+    def generate_output(self):
+        """ Generate dot code formatted output.
         """
+        node_instantiations, relationship_instantiations = self \
+            ._generate_instances_from_lists(self._nodes.values(),
+                                            self._relationships.values())
+
+        return self._generate_dot_code(node_instantiations,
+                                       relationship_instantiations)
+
+    def generate_node_centric_output(self):
+        """ Generate a graph specification per node containing the node and
+            its neighborhood.
+        """
+        outputs = {}
+        # Iterate on nodes
+        for node, node_spec in self._nodes.iteritems():
+            neighbornodes = [node_spec]
+            relationships = []
+            # Iterate on relationships
+            for couple, relationship in self._relationships.iteritems():
+                # Retrieve surrounding relationships
+                if node in couple:
+                    neighbornodes.extend([self._nodes[_node]
+                                          for _node in couple])
+                    relationships.append(relationship)
+
+            neighbornodes = list(set(neighbornodes))
+
+            # Generate instances
+            node_inst, relationship_inst = self \
+                ._generate_instances_from_lists(neighbornodes,
+                                                relationships)
+            outputs[str(node)] = self._generate_dot_code(node_inst,
+                                                         relationship_inst)
+        self._output = outputs
+        return self
+
+    def _generate_node_instance(self, name, properties):
         property_labels = self._get_formatted_property_list(properties)
 
         return " ".join(["node_" + name,
@@ -297,7 +332,7 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 
     def _generate_relationship_instance(self, binding, properties):
         """ Generate dot code relationship instantiation based on its
-            adjacencies and properties:
+            adjacencies and properties.
         """
         property_labels = self._get_formatted_property_list(properties)
         return " ".join(['"node_%s"' % str(binding['out'].node),
@@ -321,17 +356,6 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             return "\\n\\\n".join(["- %s" % prop for prop in property_list])
         return self._get_formatted_property_list(property_list[:limit - 1]
                                                  + ['...'])
-
-    def generate_output(self):
-        """ Generate dot code formatted output.
-        """
-        node_instantiations, relationship_instantiations = self \
-            ._generate_instances_from_lists(self._nodes.values(),
-                                            self._relationships.values())
-
-        return self._generate_dot_code(self.graph_title,
-                                       node_instantiations,
-                                       relationship_instantiations)
 
     def _generate_dot_code(self, node_instances, relationship_instances,
                            title=None):
@@ -372,34 +396,6 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
                                                    for inst
                                                    in relationships])
         return node_instantiations, relationship_instantiations
-
-    def generate_node_centric_output(self):
-        """ Generate a graph specification per node containing the node and
-            its neighborhood.
-        """
-        outputs = {}
-        # Iterate on nodes
-        for node, node_spec in self._nodes.iteritems():
-            neighbornodes = [node_spec]
-            relationships = []
-            # Iterate on relationships
-            for couple, relationship in self._relationships.iteritems():
-                # Retrieve surrounding relationships
-                if node in couple:
-                    neighbornodes.extend([self._nodes[_node]
-                                          for _node in couple])
-                    relationships.append(relationship)
-
-            neighbornodes = list(set(neighbornodes))
-
-            # Generate instances
-            node_inst, relationship_inst = self \
-                ._generate_instances_from_lists(neighbornodes,
-                                                relationships)
-            outputs[str(node)] = self._generate_dot_code(node_inst,
-                                                         relationship_inst)
-        self._output = outputs
-        return self
 
 # -----------------------------------------------------------------------------
 # Color generation
