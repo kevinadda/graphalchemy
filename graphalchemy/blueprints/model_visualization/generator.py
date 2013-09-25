@@ -90,7 +90,7 @@ class VisualizationGenerator(object):
         # List of in-directed adjacencies
         _ins = [adjacency for adjacency in _adjacencies
                 if adjacency.direction is 'in']
-        # List of in-directed adjacencies
+        # List of out-directed adjacencies
         _outs = [adjacency for adjacency in _adjacencies
                  if adjacency.direction is 'out']
         # List of adjacencies couples defining a relationship
