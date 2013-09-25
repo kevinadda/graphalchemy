@@ -9,6 +9,7 @@ import itertools
 from collections import Iterable
 from os import path
 
+
 # =============================================================================
 #                    VISUALIZATION GENERATOR ABSTRACT CLASS
 # =============================================================================
@@ -228,8 +229,6 @@ class VisualizationGenerator(object):
                                    "implemented in %s") % str(self.__class__))
 
 
-
-
 # =============================================================================
 #                      GRAPHVIZ VISUALIZATION GENERATOR
 # =============================================================================
@@ -314,8 +313,10 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             node_inst, relationship_inst = self \
                 ._generate_instances_from_lists(neighbornodes,
                                                 relationships)
+            node_specific_title = " ".join([self.graph_title, "- node", str(node)])
             outputs[str(node)] = self._generate_dot_code(node_inst,
-                                                         relationship_inst)
+                                                         relationship_inst,
+                                                         node_specific_title)
         self._output = outputs
         return self
 
@@ -378,7 +379,6 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             % {'TITLE': title,
                'NODES': node_instances,
                'RELATIONSHIPS': relationship_instances}
-
 
     def _generate_instances_from_lists(self, nodes, relationships):
         """ Generate graphviz node and relationship instantiations
