@@ -154,7 +154,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        query = 'graph.makeType()'
+        query = property.name_db+' = graph.makeType()'
 
         # Groups
         if property.group is not None:
@@ -197,7 +197,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        query = 'TypeGroup ' + name + ' = TypeGroup.of(' + str(id) + ', "' + name + '");'
+        query = name + ' = TypeGroup.of(' + str(id) + ', "' + name + '");'
         self._queries.append(query)
         return self
 
