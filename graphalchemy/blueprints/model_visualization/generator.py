@@ -300,8 +300,9 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
             neighbornodes = [node_spec]
             relationships = []
             # Iterate on relationships
-            for couple, relationship in self._relationships.iteritems():
+            for coords, relationship in self._relationships.iteritems():
                 # Retrieve surrounding relationships
+                couple = coords[:2]
                 if node in couple:
                     neighbornodes.extend([self._nodes[_node]
                                           for _node in couple])
