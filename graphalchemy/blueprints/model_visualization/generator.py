@@ -99,11 +99,15 @@ class VisualizationGenerator(object):
                      if _in.relationship == _out.relationship]
 
         for _binding in _bindings:
+            print _binding['in'].node, _binding['out'].node, _binding['in'].relationship 
             # Create relationship between those nodes
             relationship_dot_instance = self \
                 ._generate_relationship_instance(_binding, properties)
+            if str(_binding['in'].relationship) in ['denominator', 'numerator']:
+                print relationship_dot_instance
+                raw_input()
             self._relationships[(_binding['in'].node,
-                                 _binding['out'].node)] = relationship_dot_instance
+                                 _binding['out'].node, _binding['out'].relationship)] = relationship_dot_instance
         return
 
 # -----------------------------------------------------------------------------
