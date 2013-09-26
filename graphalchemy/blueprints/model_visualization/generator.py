@@ -72,7 +72,7 @@ class VisualizationGenerator(object):
         :type node: graphalchemy.blueprints.schema.Node
         """
         name = str(node)
-        properties = [prop.name_py for prop in node._properties.values()]
+        properties = [prop.name_db for prop in node._properties.values()]
         node_dot_instance = self._generate_node_instance(name, properties)
         self._nodes[node] = node_dot_instance
         return
@@ -84,7 +84,7 @@ class VisualizationGenerator(object):
         :type node: graphalchemy.blueprints.schema.Relationship
         """
         # List of properties
-        properties = [prop.name_py
+        properties = [prop.name_db
                       for prop in relationship._properties.values()]
         _adjacencies = relationship._adjacencies.values()
         # List of in-directed adjacencies
