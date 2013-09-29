@@ -234,31 +234,32 @@ class VisualizationGenerator(object):
 # =============================================================================
 
 class GraphvizVisualizationGenerator(VisualizationGenerator):
+    """ Creates a Graphiz visualization generator.
+
+        Example of use:
+
+        python:
+        > visualizer = GraphvizVisualizationGenerator(myMetadata)
+        > visualizer.set_output_path('/tmp/')
+            .set_filename('db_model').run().write_output()
+
+        Then:
+
+        shell:
+        $ dot -Tjpg /tmp/db_model.dot -o /tmp/db_model.jpeg
+        $ eog /tmp/db_model.jpg
+
+        or
+
+        python:
+        > from subprocess import call
+        > call(["dot", "-Tjpg", "/tmp/db_model.dot",
+                "-o", "/tmp/db_model.jpg"])
+        > call(["eog", "/tmp/db_model.jpg"])
+    """
 
     def __init__(self, metadata_map, logger=None, output_path=None):
-        """ Creates a Graphiz visualization generator.
-
-            Example of use:
-
-            python:
-            > visualizer = GraphvizVisualizationGenerator(myMetadata)
-            > visualizer.set_output_path('/tmp/')
-                .set_filename('db_model').run().write_output()
-
-            Then:
-
-            shell:
-            $ dot -Tjpg /tmp/db_model.dot -o /tmp/db_model.jpeg
-            $ eog /tmp/db_model.jpg
-
-            or
-
-            python:
-            > from subprocess import call
-            > call(["dot", "-Tjpg", "/tmp/db_model.dot",
-                    "-o", "/tmp/db_model.jpg"])
-            > call(["eog", "/tmp/db_model.jpg"])
-
+        """
         :param metadata_map: Implemented model metadata.
         :type metadata_map: graphalchemy.blueprints.schema.MetaData
         :param logger: An optionnal logger.
