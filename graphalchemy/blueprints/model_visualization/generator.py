@@ -238,11 +238,9 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 
         Example of use:
 
-        '''
-        > visualizer = GraphvizVisualizationGenerator(myMetadata)
-        > visualizer.set_output_path('/tmp/')
+        >>> visualizer = GraphvizVisualizationGenerator(myMetadata)
+        >>> visualizer.set_output_path('/tmp/')
             .set_filename('db_model').run().write_output()
-        '''
 
         Then:
 
@@ -251,12 +249,10 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 
         or
 
-        '''
-        > from subprocess import call
-        > call(["dot", "-Tjpg", "/tmp/db_model.dot",
+        >>> from subprocess import call
+        >>> call(["dot", "-Tjpg", "/tmp/db_model.dot",
                 "-o", "/tmp/db_model.jpg"])
-        > call(["eog", "/tmp/db_model.jpg"])
-        '''
+        >>> call(["eog", "/tmp/db_model.jpg"])
 
         The generator allows to generate node centric diagrams,
         i.e. a diagram around each node of the model.
@@ -266,12 +262,10 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 
         Example of use:
 
-        '''
-        > visualizer = GraphvizVisualizationGenerator(myMetadata)
-        > visualizer.set_output_path('/tmp/')
+        >>> visualizer = GraphvizVisualizationGenerator(myMetadata)
+        >>> visualizer.set_output_path('/tmp/')
             .set_filename('db_model').run()
             .generate_node_centric_output().write_output()
-        '''
 
         This will save N .dot files in folder /tmp/
     """
