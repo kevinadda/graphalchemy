@@ -90,7 +90,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        query = 'graph.makeType()'
+        query = relationship.model_name + ' = graph.makeType()'
         query += '.name("'+relationship.model_name+'")'
         # query += '.indexed('+'Edge.class'+')'
         # query += '.unique(Direction.BOTH).makePropertyKey()'
@@ -104,6 +104,11 @@ class MigrationGenerator(object):
 
         # Signature
         # @todo
+
+        # Group
+        if relationship.group is not None:
+            query += '.group('+relationship.group+')'
+            self._push_group(relationship.group, None)
 
         # Direction
         if relationship.directed:
@@ -154,11 +159,11 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        query = 'graph.makeType()'
+        query = property.name_db+' = graph.makeType()'
 
         # Groups
         if property.group is not None:
-            query += '.group("'+property.group+'")'
+            query += '.group('+property.group+')'
             self._push_group(property.group, None)
 
         # Name
@@ -197,7 +202,7 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        query = 'TypeGroup ' + name + ' = TypeGroup.of(' + str(id) + ', "' + name + '");'
+        query = name + ' = TypeGroup.of(' + str(id) + ', "' + name + '");'
         self._queries.append(query)
         return self
 

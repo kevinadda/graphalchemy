@@ -43,6 +43,7 @@ class Model(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.Model
         """
+
         raise NotImplementedError()
 
 
@@ -214,12 +215,16 @@ class Relationship(Model):
         :param properties: The list of properties that this model supports. Only
         them will be persisted in the graph.
         :type properties: list<graphalchemy.blueprints.model.Property>
+        :param group: The name of the group to save this edgeLabel in.
+        :type group: str
         """
         super(Relationship, self).__init__(model_name, metadata, *args, **kwargs)
         self.directed = kwargs.get('directed', True)
         self.signature = kwargs.get('signature', True)
+        self.group = kwargs.get('group', None)
         for prop in args:
             self.add_property(prop)
+
 
     def register_class(self, class_):
         """ Binds this model to a Python class in the current metadata map, in
@@ -341,7 +346,7 @@ class Property(object):
         :param primaryKey: Whether the property must be used as a primary key
         to index relations.
         :type primaryKey: bool
-        :param group: The name of the group to save this relation in.
+        :param group: The name of the group to save this property in.
         :type group: str
         :param prefix: Whether this property must be prefixed by the model name.
         This is typically usefull for indexing purposes, when the property name
