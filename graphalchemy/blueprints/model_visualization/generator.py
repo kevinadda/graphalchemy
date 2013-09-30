@@ -61,7 +61,7 @@ class VisualizationGenerator(object):
         for relationship in self.metadata_map._relationships.values():
             self.run_relationship(relationship)
 
-        # Generate output in a
+        # Generate output into self._output
         self._output = self.generate_output()
         return self
 
@@ -238,24 +238,42 @@ class GraphvizVisualizationGenerator(VisualizationGenerator):
 
         Example of use:
 
-        python:
+        '''
         > visualizer = GraphvizVisualizationGenerator(myMetadata)
         > visualizer.set_output_path('/tmp/')
             .set_filename('db_model').run().write_output()
+        '''
 
         Then:
 
-        shell:
         $ dot -Tjpg /tmp/db_model.dot -o /tmp/db_model.jpeg
         $ eog /tmp/db_model.jpg
 
         or
 
-        python:
+        '''
         > from subprocess import call
         > call(["dot", "-Tjpg", "/tmp/db_model.dot",
                 "-o", "/tmp/db_model.jpg"])
         > call(["eog", "/tmp/db_model.jpg"])
+        '''
+
+        The generator allows to generate node centric diagrams,
+        i.e. a diagram around each node of the model.
+        This will output N generated graphs, N being the number of
+        nodes in the model, with filename and graph title appended
+        with the node instance name.
+
+        Example of use:
+
+        '''
+        > visualizer = GraphvizVisualizationGenerator(myMetadata)
+        > visualizer.set_output_path('/tmp/')
+            .set_filename('db_model').run()
+            .generate_node_centric_output().write_output()
+        '''
+
+        This will save N .dot files in folder /tmp/
     """
 
     def __init__(self, metadata_map, logger=None, output_path=None):
