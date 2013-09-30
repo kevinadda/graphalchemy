@@ -159,6 +159,19 @@ class String(Type):
         return super(String, self).validate(value)
 
 
+def Text(Type):
+
+    name_db = "String.class"
+
+    def to_py(self, value):
+        return unicode(value)
+
+    def validate(self, value):
+        if not isinstance(value, basestring):
+            return False, [u'Wrong type : expected basestring, got '+str(type(value))]
+        return super(Text, self).validate(value)
+
+
 class Url(String):
 
     def validate(self, value):
