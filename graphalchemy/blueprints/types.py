@@ -159,7 +159,7 @@ class String(Type):
         return super(String, self).validate(value)
 
 
-def Text(Type):
+class Text(Type):
 
     name_db = "String.class"
 
