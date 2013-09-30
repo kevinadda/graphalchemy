@@ -56,7 +56,8 @@ class TestMigrationGenerator(TestCase):
         )
         websiteHostsPage = Relationship('hosts', self.metadata,
             Property('since', DateTime, nullable=False, primaryKey=True),
-            Property('accessible', Boolean())
+            Property('accessible', Boolean()),
+            group="rel"
         )
 
         websiteHostsPage_out = Adjacency(websiteHostsPage,
@@ -85,18 +86,18 @@ class TestMigrationGenerator(TestCase):
 
         self.assertEquals(self.migration_generator._queries, [
             '// Node Website',
-            'graph.makeType().name("domain").dataType(String.class).indexed("standard", Vertex.class).unique(Direction.BOTH).makePropertyKey();',
-            'graph.makeType().group("name").name("Website_name").dataType(String.class).indexed("search", Vertex.class).unique(Direction.OUT).makePropertyKey();',
-            'graph.makeType().name("tags").dataType(Collection.class).makePropertyKey();',
+            'domain = graph.makeType().name("domain").dataType(String.class).indexed("standard", Vertex.class).unique(Direction.BOTH).makePropertyKey();',
+            'Website_name = graph.makeType().group(name).name("Website_name").dataType(String.class).indexed("search", Vertex.class).unique(Direction.OUT).makePropertyKey();',
+            'tags = graph.makeType().name("tags").dataType(Collection.class).makePropertyKey();',
             '// Node Page',
-            'graph.makeType().name("url").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
-            'graph.makeType().name("title").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
+            'url = graph.makeType().name("url").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
+            'title = graph.makeType().name("title").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
             '// Relationship hosts',
-            'graph.makeType().name("accessible").dataType(Integer.class).unique(Direction.OUT).makePropertyKey();',
-            'graph.makeType().name("since").dataType(Integer.class).unique(Direction.OUT).makePropertyKey();',
-            'graph.makeType().name("hosts").primaryKey(since).directed().unique(IN).makeEdgeLabel();',
+            'accessible = graph.makeType().name("accessible").dataType(Integer.class).unique(Direction.OUT).makePropertyKey();',
+            'since = graph.makeType().name("since").dataType(Integer.class).unique(Direction.OUT).makePropertyKey();',
+            'hosts = graph.makeType().name("hosts").primaryKey(since).group(rel).directed().unique(IN).makeEdgeLabel();',
             '// Groups',
-            'TypeGroup name = TypeGroup.of(2, "name");',
+            'name = TypeGroup.of(2, "name");',
+            'rel = TypeGroup.of(3, "rel");',
         ])
-        assert False
 
