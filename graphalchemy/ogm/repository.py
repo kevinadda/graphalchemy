@@ -128,7 +128,7 @@ class Repository(object):
             index_name = self.model.model_name_storage_key
             key = index_name
             value = self.model.model_name
-            query.filter_on_index()
+            query.filter_on_index(index_name, key, value)
 
         query.filter(**kwargs)
         return query
@@ -143,7 +143,7 @@ class Repository(object):
     def _update_object(self, obj, results):
         for property_db, value_db in results.iteritems():
             found = False
-            for property in self.model._properties:
+            for property in self.model._properties.values():
                 if property.name_db != property_db:
                     continue
                 found = True
