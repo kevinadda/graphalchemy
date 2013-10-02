@@ -6,6 +6,7 @@
 # ==============================================================================
 
 from graphalchemy.blueprints.schema import Relationship
+from operator import attrgetter
 
 
 # ==============================================================================
@@ -43,15 +44,15 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        for node in self.metadata_map._nodes.values():
+        for node in sorted(self.metadata_map._nodes.values(), key=attrgetter('model_name')):
             self._queries.append('// Node '+node.model_name)
             self.run_node(node)
         for relationship in self.metadata_map._relationships.values():
             self._queries.append('// Relationship '+relationship.model_name)
             self.run_relationship(relationship)
-        self._queries.append('// Groups')
         for i, name in enumerate(self._groups.keys()):
             self.make_group(name, i + 2) # Indexing starts at 2
+        self._queries.insert(0, '// Groups')
         return self
 
 
@@ -203,7 +204,8 @@ class MigrationGenerator(object):
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
         query = name + ' = TypeGroup.of(' + str(id) + ', "' + name + '");'
-        self._queries.append(query)
+        # self._queries = [query].append(self._queries)
+        self._queries.insert(0, query)
         return self
 
 

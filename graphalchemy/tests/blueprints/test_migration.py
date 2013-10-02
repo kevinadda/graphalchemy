@@ -39,6 +39,7 @@ from graphalchemy.ogm.mapper import Mapper
 class TestMigrationGenerator(TestCase):
 
     def setUp(self):
+        self.maxDiff = None
         self.mapper = Mapper()
         self.metadata = MetaData()
 
@@ -85,19 +86,19 @@ class TestMigrationGenerator(TestCase):
         print str(self.migration_generator)
 
         self.assertEquals(self.migration_generator._queries, [
+            '// Groups',
+            'rel = TypeGroup.of(3, "rel");',
+            'name = TypeGroup.of(2, "name");',
+            '// Node Page',
+            'url = graph.makeType().name("url").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
+            'title = graph.makeType().name("title").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
             '// Node Website',
             'domain = graph.makeType().name("domain").dataType(String.class).indexed("standard", Vertex.class).unique(Direction.BOTH).makePropertyKey();',
             'Website_name = graph.makeType().group(name).name("Website_name").dataType(String.class).indexed("search", Vertex.class).unique(Direction.OUT).makePropertyKey();',
             'tags = graph.makeType().name("tags").dataType(Collection.class).makePropertyKey();',
-            '// Node Page',
-            'url = graph.makeType().name("url").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
-            'title = graph.makeType().name("title").dataType(String.class).unique(Direction.OUT).makePropertyKey();',
             '// Relationship hosts',
             'accessible = graph.makeType().name("accessible").dataType(Integer.class).unique(Direction.OUT).makePropertyKey();',
             'since = graph.makeType().name("since").dataType(Integer.class).unique(Direction.OUT).makePropertyKey();',
             'hosts = graph.makeType().name("hosts").primaryKey(since).group(rel).directed().unique(IN).makeEdgeLabel();',
-            '// Groups',
-            'name = TypeGroup.of(2, "name");',
-            'rel = TypeGroup.of(3, "rel");',
         ])
 
