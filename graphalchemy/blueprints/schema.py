@@ -454,7 +454,6 @@ class MetaData(object):
     def __init__(self, bind=None, schema=None):
         self._nodes = {}
         self._relationships = {}
-        self.schema = schema
         self.bind = bind
 
     def __repr__(self):
@@ -471,17 +470,17 @@ class MetaData(object):
         return self.for_class(class_)
 
     def for_class(self, class_):
-        if class_ in self._nodes:
+        if class_ in self._nodes.keys():
             return self._nodes[class_]
-        if class_ in self._relationships:
+        if class_ in self._relationships.keys():
             return self._relationships[class_]
         raise Exception('Unmapped class.')
 
     def for_model(self, model):
-        for class_, node_model in self._nodes:
+        for class_, node_model in self._nodes.items():
             if model is node_model:
                 return class_
-        for class_, relationship_model in self._relationships:
+        for class_, relationship_model in self._relationships.items():
             if model is relationship_model:
                 return class_
         raise Exception('Unmapped model.')
