@@ -1,7 +1,18 @@
+#! /usr/bin/env python
+#-*- coding: utf-8 -*-
+
+# ==============================================================================
+#                                      IMPORTS
+# ==============================================================================
 
 from graphalchemy.ogm.identity import IdentityMap
 from graphalchemy.ogm.unitofwork import UnitOfWork
 from graphalchemy.ogm.state import InstanceState
+
+
+# ==============================================================================
+#                                     SERVICE
+# ==============================================================================
 
 class Session(object):
 
