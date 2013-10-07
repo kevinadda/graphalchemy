@@ -182,6 +182,13 @@ class Node(Model):
         return self
 
 
+    def __repr__(self):
+        """ :returns: a readable representation of this node.
+        :rtype: str
+        """
+        return u'(' + self.model_name + u')'
+
+
 class Relationship(Model):
     """ Defines a model over an edge, by specifying its properties.
 
@@ -269,6 +276,13 @@ class Relationship(Model):
         :rtype: bool
         """
         return True
+
+
+    def __repr__(self):
+        """ :returns: a readable representation of this relationship.
+        :rtype: str
+        """
+        return u'-[:' + self.model_name + u']->'
 
 
 
