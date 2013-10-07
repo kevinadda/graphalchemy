@@ -114,7 +114,7 @@ class Repository(object):
     def filter(self, **kwargs):
         """ We have to pre-process the query here to use the right index.
         """
-        query = Query(self.session)
+        query = Query(self.session).vertices()
         # If one of the arguments is indexed, we use it first.
         indices = self.model._useful_indices_among(kwargs)
         if len(indices):
