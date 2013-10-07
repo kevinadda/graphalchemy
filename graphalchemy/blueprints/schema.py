@@ -18,7 +18,11 @@ class Model(object):
     Element (a Vertex or an Edge).
 
     This is an abstract class that is extended by specializations for Nodes
-    and Relationships.
+    and Relationships. It just defines data persistence and validation rules
+    between the Python code and the database.
+
+    Notably, it's not in charge of the creation of an object (since it has no
+    knowledge of the class).
     """
 
     # The key under which the Model name will be saved
