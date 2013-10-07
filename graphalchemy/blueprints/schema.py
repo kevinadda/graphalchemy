@@ -486,6 +486,25 @@ class MetaData(object):
                 return class_
         raise Exception('Unmapped model.')
 
+    def for_dict(self, model_dict):
+        """ Iterates over the models in order to find the model for a given
+        dictionary.
+
+        :param model_dict: The dictionary to find a model for.
+        :type model_dict: dict
+        :returns: The corresponding model or None if not found.
+        :rtype: graphalchemy.blueprints.schema.Model | None
+        """
+        for class_, node_model in self._nodes.items():
+            if model_dict.get(node_model.model_name_storage_key, None) \
+            == node_model.model_name:
+                return node_model
+        for class_, relationship_model in self._relationships.items():
+            if model_dict.get(relationship_model.model_name_storage_key, None) \
+            == relationship_model.model_name:
+                return relationship_model
+        return None
+
     def bind_node(self, class_, model):
         if not model.is_node():
             raise Exception('Bound model is not a node !')
