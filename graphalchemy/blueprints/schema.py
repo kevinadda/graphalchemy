@@ -448,28 +448,35 @@ class Property(object):
 # ==============================================================================
 
 class MetaData(object):
-    """ Holds a map of all available metadata of all mapped models.
+    """ Holds a map of all available metadata of all mapped models. Contains a
+    set of helper methods to allow fast retrieval of mappings.
     """
 
-    def __init__(self, bind=None, schema=None):
+    def __init__(self, bind=None):
         self._nodes = {}
         self._relationships = {}
         self.bind = bind
 
-    def __repr__(self):
-        return 'MetaData(bind=%r)' % self.bind
-
-
-    def __contains__(self, table_or_key):
-        if not isinstance(table_or_key, util.string_types):
-            table_or_key = table_or_key.key
-        return table_or_key in self.tables
-
     def for_object(self, obj):
+        """ Returns the model corresponding to a given Python object.
+
+        :param class_: A Python instance.
+        :returns: The corresponding model.
+        :rtype: graphalchemy.blueprints.schema.Model
+        :raises: Exception if the given instance has no model.
+        """
         class_ = obj.__class__
         return self.for_class(class_)
 
     def for_class(self, class_):
+        """ Returns the model corresponding to a given Python class.
+
+        :param class_: A Python class.
+        :type class_: object
+        :returns: The corresponding model.
+        :rtype: graphalchemy.blueprints.schema.Model
+        :raises: Exception if the given class has no model.
+        """
         if class_ in self._nodes.keys():
             return self._nodes[class_]
         if class_ in self._relationships.keys():
@@ -477,6 +484,11 @@ class MetaData(object):
         raise Exception('Unmapped class.')
 
     def for_model(self, model):
+        """ Returns the Python class corresponding to a given model.
+
+        :param model: A graphalchemy model.
+        :type model: graphalchemy.blueprints.schema.Model
+        """
         for class_, node_model in self._nodes.items():
             if model is node_model:
                 return class_
@@ -505,24 +517,73 @@ class MetaData(object):
         return None
 
     def bind_node(self, class_, model):
+        """ Registers the given model in this metadata map by binding it to
+        its corresponding class.
+
+        :param class_: A Python class to register in this metadata map.
+        :param model: The corresponding graphalchemy node model.
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Metadata
+        """
         if not model.is_node():
             raise Exception('Bound model is not a node !')
         self._nodes[class_] = model
         return self
 
     def bind_relationship(self, class_, model):
+        """ Registers the given model in this metadata map by binding it to
+        its corresponding class.
+
+        :param class_: A Python class to register in this metadata map.
+        :param model: The corresponding graphalchemy relationship model.
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Metadata
+        """
         if not model.is_relationship():
             raise Exception('Bound model is not a relationship !')
         self._relationships[class_] = model
         return self
 
     def is_node(self, obj):
+        """ Checks whether a given instance has a node model registered in this
+        metadata map.
+
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
         return obj.__class__ in self._nodes
 
     def is_relationship(self, obj):
+        """ Checks whether a given instance has a relationship model registered
+        in this metadata map.
+
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
         return obj.__class__ in self._relationships
 
     def is_bind(self, obj):
+        """ Checks whether a given instance has a model in this metadata map.
+
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
         return self.is_node(obj) or self.is_relationship(obj)
 
+    def __contains__(self, obj):
+        """ Checks whether a given instance has a model in this metadata map.
 
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
+        return self.is_bind(obj)
+
+    def __repr__(self):
+        """ :returns: A readable representation of this object.
+        :rtype: str
+        """
+        return u'MetaData(bind=%r)' % self.bind
