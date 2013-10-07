@@ -7,22 +7,12 @@
 
 from unittest import TestCase
 
-# Services
-from graphalchemy.ogm import BulbsObjectManager
-
 
 # ==============================================================================
 #                                     TESTING
 # ==============================================================================
 
 class GraphAlchemyTestCase(TestCase):
-    """ Base class for GraphAlchemy tests. Loads the default OGM in the ogm
-    attribute;
+    """ Base class for GraphAlchemy tests.
     """
-    
-    ogm = BulbsObjectManager(
-        "http://localhost:8182/graphs/", 
-        "graph", 
-        model_paths=['graphalchemy.fixture.model']
-    )
-    
+    pass
