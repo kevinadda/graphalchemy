@@ -35,6 +35,13 @@ class Session(object):
         return self
 
 
+    def delete(self, instance):
+        if instance not in self.identity_map:
+            raise Exception('Object is not in the identity map.')
+        self._delete.append(instance)
+        return self
+
+
     def get_vertex(self, id):
         obj = self.identity_map.get_by_id(id)
         if obj:
