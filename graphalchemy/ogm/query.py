@@ -307,12 +307,15 @@ class Query(object):
         ``Query``.
         """
         self._limit = limit
+        return self
+
 
     def offset(self, offset):
         """Apply an ``OFFSET`` to the query and return the newly resulting
         ``Query``.
         """
         self._offset = offset
+        return self
 
 
     def __iter__(self):
