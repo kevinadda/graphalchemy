@@ -229,7 +229,7 @@ class Query(object):
 
     def execute(self):
         script, params = self.compile()
-        return self.execute_raw_groovy(scripts, params)
+        return self.execute_raw_groovy(script, params)
 
 
     def execute_raw_groovy(self, query, params={}):
