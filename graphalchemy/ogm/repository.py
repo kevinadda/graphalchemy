@@ -13,19 +13,24 @@ from graphalchemy.ogm.query import Query
 # ==============================================================================
 
 class Repository(object):
-    """ Repositories are shortcuts that allow simple querying of entities.
+    """ Repositories represent collections of objects that follow a given
+    model. As such, they rely both on the Python class of the model and on
+    the model itself. As such, they contain :
 
-    Repositories can be loaded directly from the OGM :
-    >>> repository = ogm.repository('Website')
-
-    Easy entity creation and pre-persistence :
+    Methods to create an object :
     >>> website = repository(domain="http://www.foodnetwork.com")
     >>> website = repository.create(domain="http://www.allrecipes.com")
 
-    SQL-alchemy like API for querying, with automatic index selection :
-    >>> repository = ogm.repository('User')
+    Methods to query this collection of objects
     >>> users = repository.filter(firstname="Joe")
     >>> users = repository.filter(firstname="Joe", lastname="Miller")
+
+    Repositories can be overloaded by the user to group shortcut queries that
+    are usefull for his own purpose.
+    >>> users = repository.find_new()
+
+    Repositories can be loaded directly from the OGM :
+    >>> repository = ogm.repository('User')
     """
 
     def __init__(self, session, model, class_, logger=None):
