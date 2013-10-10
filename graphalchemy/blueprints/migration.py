@@ -170,9 +170,6 @@ class MigrationGenerator(object):
         query += '.name("'+property.name_db+'")'
 
         # Type
-        print property
-        print property.type
-        print property.type.__dict__
         query += '.dataType('+property.type.name_db+')'
 
         # Indexing
@@ -241,8 +238,11 @@ class MigrationGenerator(object):
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        if name_db in self._labels:
-            raise Exception('This label is already used : '+str(name_db))
+        if name_db in self._labels \
+                and not self._labels[name_db] == query:
+            raise Exception(('This label is already used with '
+                             'differently defined type : ') + str(name_db))
+
         self._labels[name_db] = query
         self._queries.append(query)
         return self
