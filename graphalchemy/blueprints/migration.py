@@ -170,6 +170,9 @@ class MigrationGenerator(object):
         query += '.name("'+property.name_db+'")'
 
         # Type
+        print property
+        print property.type
+        print property.type.__dict__
         query += '.dataType('+property.type.name_db+')'
 
         # Indexing
@@ -188,7 +191,7 @@ class MigrationGenerator(object):
         # Type
         query += '.makePropertyKey()'
         query += ';'
-        self._push_property(property.name_db, query)
+        self._push_property(property.name_db, property.no_conflict, query)
         return self
 
 
@@ -207,18 +210,20 @@ class MigrationGenerator(object):
         return self
 
 
-    def _push_property(self, name_db, query):
+    def _push_property(self, name_db, no_conflict, query):
         """ Adds a property to the creation list. This is usefull to detect and
         resolve conflicts at model definition runtime.
 
         :param name_db: The name of the property in the database.
         :type name_db: str
+        :param no_conflict: The no_conflict boolean of the property.
+        :type no_conflict: bool
         :param query: The corresponding query.
         :type query: str
         :returns: This object itself.
         :rtype: graphalchemy.blueprints.schema.MigrationGenerator
         """
-        if name_db in self._properties:
+        if not no_conflict and name_db in self._properties:
             raise Exception('This property is already used : '+str(name_db))
         self._properties[name_db] = query
         self._queries.append(query)
