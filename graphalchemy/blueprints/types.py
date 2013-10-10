@@ -216,5 +216,5 @@ class List(Type):
 
 class Dict(Type):
 
-    name_db = 'Map.class'
+    name_db = 'HashMap.class'
 
