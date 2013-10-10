@@ -60,6 +60,8 @@ class Type(object):
 
 class Numeric(Type):
 
+    name_db = "Float.class"
+
     def __init__(self, min_value=None, max_value=None):
         """ Defines the specifications of the Type.
 
@@ -120,6 +122,8 @@ class Boolean(Integer):
 
 
 class Const(Type):
+
+    name_db = "Integer.class"
 
     def __init__(self, choices):
         """ Defines the specifications of the Type.
@@ -197,6 +201,8 @@ class DateTime(Type):
 
 class Date(Type):
 
+    name_db = "Date.class"
+
     def validate(self, value):
         if not isinstance(value, date):
             return False, [u'Wrong type : expected date, got '+str(type(value))]
@@ -208,10 +214,7 @@ class List(Type):
     name_db = 'Collection.class'
 
 
-
 class Dict(Type):
 
     name_db = 'Map.class'
-
-
 
