@@ -211,7 +211,7 @@ class Date(Type):
 
 class List(Type):
 
-    name_db = 'Collection.class'
+    name_db = 'ArrayList.class'
 
 
 class Dict(Type):
