@@ -211,10 +211,10 @@ class Date(Type):
 
 class List(Type):
 
-    name_db = 'Collection.class'
+    name_db = 'ArrayList.class'
 
 
 class Dict(Type):
 
-    name_db = 'Map.class'
+    name_db = 'HashMap.class'
 
