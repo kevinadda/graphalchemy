@@ -43,7 +43,7 @@ class UnitOfWork(object):
 
                 # Get data to update
                 data = {}
-                for property in class_meta._properties:
+                for property in class_meta._properties.values():
                     self._log('  Property '+str(property)+' is new.')
                     python_value = getattr(obj, property.name_py)
                     property.validate(python_value)

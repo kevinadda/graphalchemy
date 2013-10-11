@@ -52,8 +52,8 @@ class RepositoryTestCase(TestCase):
 		self.session.add(website_obj)
 		self.session.flush()
 
-		# self.session.clear()
-
+		# If the session is not cleared, the entity stays in the entity map and
+		# returns the same object.
 		obj = self.repository.get(website_obj.id)
 		self.assertEquals(obj.id, website_obj.id)
 		self.assertEquals(obj.title, 'Title')
@@ -61,14 +61,26 @@ class RepositoryTestCase(TestCase):
 		self.assertIsInstance(obj, Page)
 		self.assertIs(obj, website_obj)
 
-		# Clearing session to re-load object
+		# If the session is cleared, the entity disappears from the entity map and
+		# a new object is returned.
 		self.session.clear()
-
 		obj = self.repository.get(website_obj.id)
 		self.assertEquals(obj.id, website_obj.id)
 		self.assertEquals(obj.title, 'Title')
 		self.assertEquals(obj.url, "http://allrecipes.com/page/1")
 		self.assertIsInstance(obj, Page)
-		# self.assertIs(obj, website_obj)
+		self.assertIsNot(obj, website_obj)
 
 
+	def test_filter(self):
+
+		results = self.repository.filter(title='Title').all()
+		print results
+		for result in results:
+			self.session.delete(result)
+		self.session.flush()
+		print results
+
+
+
+		assert False

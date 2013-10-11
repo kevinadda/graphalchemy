@@ -18,7 +18,11 @@ class Model(object):
     Element (a Vertex or an Edge).
 
     This is an abstract class that is extended by specializations for Nodes
-    and Relationships.
+    and Relationships. It just defines data persistence and validation rules
+    between the Python code and the database.
+
+    Notably, it's not in charge of the creation of an object (since it has no
+    knowledge of the class).
     """
 
     # The key under which the Model name will be saved
@@ -182,6 +186,13 @@ class Node(Model):
         return self
 
 
+    def __repr__(self):
+        """ :returns: a readable representation of this node.
+        :rtype: str
+        """
+        return u'(' + self.model_name + u')'
+
+
 class Relationship(Model):
     """ Defines a model over an edge, by specifying its properties.
 
@@ -269,6 +280,13 @@ class Relationship(Model):
         :rtype: bool
         """
         return True
+
+
+    def __repr__(self):
+        """ :returns: a readable representation of this relationship.
+        :rtype: str
+        """
+        return u'-[:' + self.model_name + u']->'
 
 
 
@@ -434,63 +452,181 @@ class Property(object):
 # ==============================================================================
 
 class MetaData(object):
-    """ Holds a map of all available metadata of all mapped models.
+    """ Holds a map of all available metadata of all mapped models. Contains a
+    set of helper methods to allow fast retrieval of mappings.
+
+    As the connecting link between models and Python classes, it is also in
+    charge of the creation of Python objects from database results.
     """
 
-    def __init__(self, bind=None, schema=None):
+    def __init__(self, bind=None):
         self._nodes = {}
         self._relationships = {}
-        self.schema = schema
         self.bind = bind
 
-    def __repr__(self):
-        return 'MetaData(bind=%r)' % self.bind
-
-
-    def __contains__(self, table_or_key):
-        if not isinstance(table_or_key, util.string_types):
-            table_or_key = table_or_key.key
-        return table_or_key in self.tables
-
     def for_object(self, obj):
+        """ Returns the model corresponding to a given Python object.
+
+        :param class_: A Python instance.
+        :returns: The corresponding model.
+        :rtype: graphalchemy.blueprints.schema.Model
+        :raises: Exception if the given instance has no model.
+        """
         class_ = obj.__class__
         return self.for_class(class_)
 
     def for_class(self, class_):
-        if class_ in self._nodes:
+        """ Returns the model corresponding to a given Python class.
+
+        :param class_: A Python class.
+        :type class_: object
+        :returns: The corresponding model.
+        :rtype: graphalchemy.blueprints.schema.Model
+        :raises: Exception if the given class has no model.
+        """
+        if class_ in self._nodes.keys():
             return self._nodes[class_]
-        if class_ in self._relationships:
+        if class_ in self._relationships.keys():
             return self._relationships[class_]
         raise Exception('Unmapped class.')
 
     def for_model(self, model):
-        for class_, node_model in self._nodes:
+        """ Returns the Python class corresponding to a given model.
+
+        :param model: A graphalchemy model.
+        :type model: graphalchemy.blueprints.schema.Model
+        """
+        for class_, node_model in self._nodes.items():
             if model is node_model:
                 return class_
-        for class_, relationship_model in self._relationships:
+        for class_, relationship_model in self._relationships.items():
             if model is relationship_model:
                 return class_
         raise Exception('Unmapped model.')
 
+    def for_dict(self, model_dict):
+        """ Iterates over the models in order to find the model for a given
+        dictionary.
+
+        :param model_dict: The dictionary to find a model for.
+        :type model_dict: dict
+        :returns: The corresponding model or None if not found.
+        :rtype: graphalchemy.blueprints.schema.Model | None
+        """
+        for class_, node_model in self._nodes.items():
+            if model_dict.get(node_model.model_name_storage_key, None) \
+            == node_model.model_name:
+                return node_model
+        for class_, relationship_model in self._relationships.items():
+            if model_dict.get(relationship_model.model_name_storage_key, None) \
+            == relationship_model.model_name:
+                return relationship_model
+        return None
+
     def bind_node(self, class_, model):
+        """ Registers the given model in this metadata map by binding it to
+        its corresponding class.
+
+        :param class_: A Python class to register in this metadata map.
+        :param model: The corresponding graphalchemy node model.
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Metadata
+        """
         if not model.is_node():
             raise Exception('Bound model is not a node !')
         self._nodes[class_] = model
         return self
 
     def bind_relationship(self, class_, model):
+        """ Registers the given model in this metadata map by binding it to
+        its corresponding class.
+
+        :param class_: A Python class to register in this metadata map.
+        :param model: The corresponding graphalchemy relationship model.
+        :returns: This object itself.
+        :rtype: graphalchemy.blueprints.schema.Metadata
+        """
         if not model.is_relationship():
             raise Exception('Bound model is not a relationship !')
         self._relationships[class_] = model
         return self
 
     def is_node(self, obj):
+        """ Checks whether a given instance has a node model registered in this
+        metadata map.
+
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
         return obj.__class__ in self._nodes
 
     def is_relationship(self, obj):
+        """ Checks whether a given instance has a relationship model registered
+        in this metadata map.
+
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
         return obj.__class__ in self._relationships
 
     def is_bind(self, obj):
+        """ Checks whether a given instance has a model in this metadata map.
+
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
         return self.is_node(obj) or self.is_relationship(obj)
 
+    def __contains__(self, obj):
+        """ Checks whether a given instance has a model in this metadata map.
 
+        :param obj: A python object.
+        :type obj: object
+        :rtype: boolean
+        """
+        return self.is_bind(obj)
+
+    def __repr__(self):
+        """ :returns: A readable representation of this object.
+        :rtype: str
+        """
+        return u'MetaData(bind=%r)' % self.bind
+
+
+    def _object_from_dict(self, dict_):
+
+        # Find the model
+        model = self.for_dict(dict_)
+        if model is None:
+            return None
+        # Remove item for field validation
+        dict_.pop(model.model_name_storage_key)
+
+        # Verify type
+        _type = dict_.pop('_type')
+        self._check_type(_type)
+
+        # Build object
+        class_ = self.for_model(model)
+        obj = class_(results)
+        self._update_object(obj, results)
+        obj.id = id
+        return obj
+
+
+    def _update_object(self, obj, results):
+        for property_db, value_db in results.iteritems():
+            found = False
+            for property in self.model._properties.values():
+                if property.name_db != property_db:
+                    continue
+                found = True
+                break
+            if not found:
+                raise Exception('Property retrieved but not found : '+property_db)
+            value_py = property.to_py(value_db)
+            setattr(obj, property.name_py, value_py)
+        return obj

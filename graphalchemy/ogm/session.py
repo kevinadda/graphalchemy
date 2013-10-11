@@ -1,7 +1,18 @@
+#! /usr/bin/env python
+#-*- coding: utf-8 -*-
+
+# ==============================================================================
+#                                      IMPORTS
+# ==============================================================================
 
 from graphalchemy.ogm.identity import IdentityMap
 from graphalchemy.ogm.unitofwork import UnitOfWork
 from graphalchemy.ogm.state import InstanceState
+
+
+# ==============================================================================
+#                                     SERVICE
+# ==============================================================================
 
 class Session(object):
 
@@ -21,6 +32,13 @@ class Session(object):
             self._update.append(instance)
         else:
             self._new.append(instance)
+        return self
+
+
+    def delete(self, instance):
+        if instance not in self.identity_map:
+            raise Exception('Object is not in the identity map.')
+        self._delete.append(instance)
         return self
 
 

@@ -5,7 +5,7 @@
 #                                      IMPORTS
 # ==============================================================================
 
-from graphalchemy.ogm.query import Query
+from graphalchemy.ogm.query import ModelAwareQuery
 
 
 # ==============================================================================
@@ -13,19 +13,24 @@ from graphalchemy.ogm.query import Query
 # ==============================================================================
 
 class Repository(object):
-    """ Repositories are shortcuts that allow simple querying of entities.
+    """ Repositories represent collections of objects that follow a given
+    model. As such, they rely both on the Python class of the model and on
+    the model itself. As such, they contain :
 
-    Repositories can be loaded directly from the OGM :
-    >>> repository = ogm.repository('Website')
-
-    Easy entity creation and pre-persistence :
+    Methods to create an object :
     >>> website = repository(domain="http://www.foodnetwork.com")
     >>> website = repository.create(domain="http://www.allrecipes.com")
 
-    SQL-alchemy like API for querying, with automatic index selection :
-    >>> repository = ogm.repository('User')
+    Methods to query this collection of objects
     >>> users = repository.filter(firstname="Joe")
     >>> users = repository.filter(firstname="Joe", lastname="Miller")
+
+    Repositories can be overloaded by the user to group shortcut queries that
+    are usefull for his own purpose.
+    >>> users = repository.find_new()
+
+    Repositories can be loaded directly from the OGM :
+    >>> repository = ogm.repository('User')
     """
 
     def __init__(self, session, model, class_, logger=None):
@@ -92,29 +97,25 @@ class Repository(object):
         self._log('Object not found in entity map')
         results = response.content['results']
 
-        # Verify type
-        _type = results.pop('_type')
-        self._check_type(_type)
-
-        # Verify model_name
-        model_name = results.pop(self.model.model_name_storage_key)
-        self._check_model_name(model_name)
-
         # Verify id
-        _id = results.pop('_id')
-        self._check_id(_id, id)
+        result = ModelAwareQuery(self.session).vertices() \
+                                              .filter(eid=id) \
+                                              .one()
 
-        # Build object
-        obj = self._build_object(results)
-        obj.id = id
+        # @todo
+        # add a check model
 
-        self.session.add_to_identity_map(obj)
-        return obj
+        if result.id != id:
+            raise Exception('Expected '+str(id)+', got '+str(_id))
+
+        return result
+
+
 
     def filter(self, **kwargs):
         """ We have to pre-process the query here to use the right index.
         """
-        query = Query(self.session)
+        query = ModelAwareQuery(self.session).vertices()
         # If one of the arguments is indexed, we use it first.
         indices = self.model._useful_indices_among(kwargs)
         if len(indices):
@@ -128,7 +129,7 @@ class Repository(object):
             index_name = self.model.model_name_storage_key
             key = index_name
             value = self.model.model_name
-            query.filter_on_index()
+            query.filter_on_index(index_name, key, value)
 
         query.filter(**kwargs)
         return query
@@ -143,7 +144,7 @@ class Repository(object):
     def _update_object(self, obj, results):
         for property_db, value_db in results.iteritems():
             found = False
-            for property in self.model._properties:
+            for property in self.model._properties.values():
                 if property.name_db != property_db:
                     continue
                 found = True
@@ -158,12 +159,6 @@ class Repository(object):
     def _check_model_name(self, model_name):
         if model_name != self.model.model_name:
             raise Exception('Expected vertex, got '+str(model_name))
-        return True
-
-
-    def _check_id(self, _id, id):
-        if _id != id:
-            raise Exception('Expected '+str(id)+', got '+str(_id))
         return True
 
 

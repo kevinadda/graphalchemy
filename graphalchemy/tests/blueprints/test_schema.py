@@ -28,21 +28,59 @@ from graphalchemy.fixture.declarative import websiteHostsPageZ
 
 class MetadataTestCase(TestCase):
 
-    def test_is_relationship(self):
+    def test___init__(self):
 
+        # Local fixtures
+        d0 = {
+            'title': 'Foo',
+            'content': 'Bar',
+        }
+        d1 = {
+            'title': 'Foo',
+            'content': 'Bar',
+            website.model_name_storage_key: website.model_name
+        }
+        d2 = {
+            'title': 'Foo',
+            'content': 'Bar',
+            websiteHostsPageZ.model_name_storage_key: websiteHostsPageZ.model_name
+        }
         metadata = MetaData()
+
+        # Initialization, no model loaded.
         self.assertFalse(metadata.is_node(Website()))
         self.assertFalse(metadata.is_relationship(Website()))
         self.assertFalse(metadata.is_bind(Website()))
         self.assertFalse(metadata.is_node(WebsiteHostsPage()))
         self.assertFalse(metadata.is_relationship(WebsiteHostsPage()))
         self.assertFalse(metadata.is_bind(WebsiteHostsPage()))
+        self.assertNotIn(Website(), metadata)
+        self.assertNotIn(WebsiteHostsPage(), metadata)
+        self.assertIsNone(metadata.for_dict(d0))
+        self.assertIsNone(metadata.for_dict(d1))
+        self.assertIsNone(metadata.for_dict(d2))
 
+        # Bind nodes
         metadata.bind_node(Website, website)
         metadata.bind_relationship(WebsiteHostsPage, websiteHostsPageZ)
+
+        # Models bound.
         self.assertTrue(metadata.is_node(Website()))
         self.assertFalse(metadata.is_relationship(Website()))
         self.assertTrue(metadata.is_bind(Website()))
         self.assertFalse(metadata.is_node(WebsiteHostsPage()))
         self.assertTrue(metadata.is_relationship(WebsiteHostsPage()))
         self.assertTrue(metadata.is_bind(WebsiteHostsPage()))
+        self.assertIn(Website(), metadata)
+        self.assertIn(WebsiteHostsPage(), metadata)
+        self.assertIsNone(metadata.for_dict(d0))
+        self.assertIs(website, metadata.for_dict(d1))
+        self.assertIs(websiteHostsPageZ, metadata.for_dict(d2))
+        self.assertIs(website, metadata.for_class(Website))
+        self.assertIs(website, metadata.for_object(Website()))
+        self.assertIs(websiteHostsPageZ, metadata.for_class(WebsiteHostsPage))
+        self.assertIs(websiteHostsPageZ, metadata.for_object(WebsiteHostsPage()))
+
+
+
+
