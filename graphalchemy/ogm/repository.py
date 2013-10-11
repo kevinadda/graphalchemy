@@ -5,7 +5,7 @@
 #                                      IMPORTS
 # ==============================================================================
 
-from graphalchemy.ogm.query import Query
+from graphalchemy.ogm.query import ModelAwareQuery
 
 
 # ==============================================================================
@@ -97,29 +97,25 @@ class Repository(object):
         self._log('Object not found in entity map')
         results = response.content['results']
 
-        # Verify type
-        _type = results.pop('_type')
-        self._check_type(_type)
-
-        # Verify model_name
-        model_name = results.pop(self.model.model_name_storage_key)
-        self._check_model_name(model_name)
-
         # Verify id
-        _id = results.pop('_id')
-        self._check_id(_id, id)
+        result = ModelAwareQuery(self.session).vertices() \
+                                              .filter(eid=id) \
+                                              .one()
 
-        # Build object
-        obj = self._build_object(results)
-        obj.id = id
+        # @todo
+        # add a check model
 
-        self.session.add_to_identity_map(obj)
-        return obj
+        if result.id != id:
+            raise Exception('Expected '+str(id)+', got '+str(_id))
+
+        return result
+
+
 
     def filter(self, **kwargs):
         """ We have to pre-process the query here to use the right index.
         """
-        query = Query(self.session).vertices()
+        query = ModelAwareQuery(self.session).vertices()
         # If one of the arguments is indexed, we use it first.
         indices = self.model._useful_indices_among(kwargs)
         if len(indices):
@@ -163,12 +159,6 @@ class Repository(object):
     def _check_model_name(self, model_name):
         if model_name != self.model.model_name:
             raise Exception('Expected vertex, got '+str(model_name))
-        return True
-
-
-    def _check_id(self, _id, id):
-        if _id != id:
-            raise Exception('Expected '+str(id)+', got '+str(_id))
         return True
 
 

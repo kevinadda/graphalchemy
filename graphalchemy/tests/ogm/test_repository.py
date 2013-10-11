@@ -62,6 +62,7 @@ class RepositoryTestCase(TestCase):
 		self.assertIs(obj, website_obj)
 
 		# If the session is cleared, the entity disappears from the entity map and
+		# a new object is returned.
 		self.session.clear()
 		obj = self.repository.get(website_obj.id)
 		self.assertEquals(obj.id, website_obj.id)
@@ -71,5 +72,15 @@ class RepositoryTestCase(TestCase):
 		self.assertIsNot(obj, website_obj)
 
 
+	def test_filter(self):
+
+		results = self.repository.filter(title='Title').all()
+		print results
+		for result in results:
+			self.session.delete(result)
+		self.session.flush()
+		print results
 
 
+
+		assert False

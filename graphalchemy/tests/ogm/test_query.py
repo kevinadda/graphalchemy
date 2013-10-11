@@ -107,8 +107,15 @@ class RepositoryTestCase(TestCase):
 
         query = Query(self.session)
         query.execute_raw_groovy('g.V')
+        print query._results
+        query.execute_raw_groovy("g.V('element_type', 'Page').as('Page').in.as('Website').table(t);")
+        print query._results
         query.execute_raw_groovy("t = new Table(); g.V('element_type', 'Page').as('Page').in.as('Website').table(t); return t;")
         print query._results
 
         assert False
+
+    def test_build(self):
+
+        # Tests if the
 

@@ -454,6 +454,9 @@ class Property(object):
 class MetaData(object):
     """ Holds a map of all available metadata of all mapped models. Contains a
     set of helper methods to allow fast retrieval of mappings.
+
+    As the connecting link between models and Python classes, it is also in
+    charge of the creation of Python objects from database results.
     """
 
     def __init__(self, bind=None):
@@ -591,3 +594,39 @@ class MetaData(object):
         :rtype: str
         """
         return u'MetaData(bind=%r)' % self.bind
+
+
+    def _object_from_dict(self, dict_):
+
+        # Find the model
+        model = self.for_dict(dict_)
+        if model is None:
+            return None
+        # Remove item for field validation
+        dict_.pop(model.model_name_storage_key)
+
+        # Verify type
+        _type = dict_.pop('_type')
+        self._check_type(_type)
+
+        # Build object
+        class_ = self.for_model(model)
+        obj = class_(results)
+        self._update_object(obj, results)
+        obj.id = id
+        return obj
+
+
+    def _update_object(self, obj, results):
+        for property_db, value_db in results.iteritems():
+            found = False
+            for property in self.model._properties.values():
+                if property.name_db != property_db:
+                    continue
+                found = True
+                break
+            if not found:
+                raise Exception('Property retrieved but not found : '+property_db)
+            value_py = property.to_py(value_db)
+            setattr(obj, property.name_py, value_py)
+        return obj
